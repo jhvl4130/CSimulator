@@ -30,11 +30,4 @@ public static class CollisionDetection
 
         // 3단계: 정밀 다각형 판정 (Ray Casting)
         return IsPointInPolygon(pos.X, pos.Y, b.Polygon);
-    }
-
-    public static double Distance(in XYZPos a, in XYZPos b)
-    {
-        double dx = a.X - b.X, dy = a.Y - b.Y, dz = a.Z - b.Z;
-        return Math.Sqrt(dx * dx + dy * dy + dz * dz);
-    }
-}
+    }}
