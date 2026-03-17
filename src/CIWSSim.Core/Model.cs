@@ -1,0 +1,67 @@
+using CIWSSim.Core.Events;
+using CIWSSim.Core.Geometry;
+
+namespace CIWSSim.Core;
+
+public abstract class Model
+{
+    public int Id { get; }
+    public string Name { get; set; } = "";
+    public int Class { get; set; }
+    public int Type { get; set; }
+
+    public Engine? Engine { get; set; }
+
+    // 설정 값
+    public double StartT { get; set; }
+    public XYZPos IniPos { get; set; }
+    public double IniSpeed { get; set; }
+    public double IniAzimuth { get; set; }
+    public double IniElevation { get; set; }
+
+    public Building Building { get; set; } = new();
+
+    public List<XYZWayp> Waypoints { get; } = new();
+
+    public double Power { get; set; }
+
+    // 런타임 값
+    public int Phase { get; set; } = SimConstants.PhaseRun;
+    public double TA { get; set; }
+
+    // 현 위치 및 이동 정보
+    public XYZPos Pos { get; set; }
+    public Pose Pose { get; set; }
+    public double Speed { get; set; }
+
+    // 상태
+    public bool IsEnabled { get; set; } = true;
+    public double Health { get; set; } = 100.0;
+
+    protected Model(int id)
+    {
+        Id = id;
+    }
+
+    public abstract double Init(double t);
+    public abstract double IntTrans(double t);
+    public abstract double ExtTrans(double t, SimEvent ev);
+
+    public void InitRuntimeVars()
+    {
+        Pos = IniPos;
+        Pose = new Pose(IniAzimuth, IniElevation, 0.0);
+        Health = 100.0;
+    }
+
+    public void AddWaypoint(XYZWayp wpt)
+    {
+        Waypoints.Add(wpt);
+    }
+
+    public void SetBuilding(Building building)
+    {
+        Building = building;
+        Building.UpdateAABB();
+    }
+}
