@@ -7,7 +7,7 @@ public abstract class Model
 {
     public int Id { get; }
     public string Name { get; set; } = "";
-    public int Class { get; set; }
+    public ModelClass Class { get; set; }
     public int Type { get; set; }
 
     public Engine? Engine { get; set; }

@@ -8,7 +8,7 @@ public class Asset : Model
 {
     public Asset(int id) : base(id)
     {
-        Class = ClsAsset;
+        Class = ModelClass.Asset;
         Type = MtAsset;
         Name = $"Asset-{id}";
     }

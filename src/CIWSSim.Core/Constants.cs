@@ -1,5 +1,14 @@
 namespace CIWSSim.Core;
 
+public enum ModelClass
+{
+    Platform = 0,
+    Sensor = 1,
+    C2 = 2,
+    Weapon = 3,
+    Asset = 4
+}
+
 public static class SimConstants
 {
     public const double MovePeriod = 0.01;
@@ -8,12 +17,6 @@ public static class SimConstants
     public const int PhaseWaitStart = 0;
     public const int PhaseRun = 1;
 
-    // Model class (scheduling priority)
-    public const int ClsPlatform = 0;
-    public const int ClsSensor = 1;
-    public const int ClsC2 = 2;
-    public const int ClsWeapon = 3;
-    public const int ClsAsset = 4;
     public const int ClsNum = 5;
 
     // Model types - Platform

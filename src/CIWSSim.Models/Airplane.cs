@@ -9,7 +9,7 @@ public class Airplane : Model
 {
     public Airplane(int id) : base(id)
     {
-        Class = ClsPlatform;
+        Class = ModelClass.Platform;
         Type = MtAirplane;
         Name = $"Airplane-{id}";
         Power = 50.0;

@@ -24,7 +24,7 @@ public class Engine
                 bucket[i] = new List<Model>();
             _schedMap[t64] = bucket;
         }
-        bucket[model.Class].Add(model);
+        bucket[(int)model.Class].Add(model);
     }
 
     private void RemoveModelFromSchedule(Model model)

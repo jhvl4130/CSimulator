@@ -11,7 +11,7 @@ public class Rocket : Model
 
     public Rocket(int id, XYZPos lp, XYZPos gip, double speed, double azi, double ele) : base(id)
     {
-        Class = ClsPlatform;
+        Class = ModelClass.Platform;
         Type = MtRocket;
         Name = $"Rocket-{id}";
 
