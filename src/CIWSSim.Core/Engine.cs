@@ -10,11 +10,15 @@ public class Engine
     private readonly SortedDictionary<long, List<Model>[]> _schedMap = new();
     private readonly List<Model> _schedTmp = new();
     private readonly List<Model> _assets = new();
+    private readonly List<StateRecord> _records = new();
 
     public double TL { get; private set; }
 
     /// <summary>ENU 원점의 LLH 좌표. ENU→LLH 변환 시 사용.</summary>
     public LLHPos Origin { get; set; }
+
+    /// <summary>CSV 출력 경로. null이면 출력하지 않음.</summary>
+    public string? OutputPath { get; set; } = "output.csv";
 
     public List<Model> GetAssets() => _assets;
 
@@ -45,6 +49,7 @@ public class Engine
     public void Start(double endT = SimConstants.TInfinite)
     {
         TL = 0.0;
+        _records.Clear();
 
         Logger.Dbg("Simulation Start\n");
 
@@ -79,6 +84,9 @@ public class Engine
                 }
             }
 
+            // 매 시간 버킷 처리 후, 활성 모델 전체 상태 기록
+            RecordAll();
+
             _schedMap.Remove(tKey);
 
             foreach (var model in _schedTmp)
@@ -102,6 +110,29 @@ public class Engine
         {
             Logger.Dbg($"Simulation end : time = {TL:F6}\n");
         }
+
+        ExportCsv();
+    }
+
+    private void RecordAll()
+    {
+        foreach (var (_, model) in _modelMap)
+        {
+            if (model.IsEnabled)
+            {
+                _records.Add(new StateRecord(TL, model.Id, model.Type, model.Pos, model.Pose));
+            }
+        }
+    }
+
+    private void ExportCsv()
+    {
+        if (OutputPath is null || _records.Count == 0)
+            return;
+
+        var rows = _records.Select(r => r.ToCsvRow(Origin));
+        FileIO.SaveCsv(OutputPath, StateRecord.CsvHeader, rows);
+        Logger.Dbg($"CSV exported: {OutputPath} ({_records.Count} records)\n");
     }
 
     public void SendEvent(Model model, SimEvent ev)

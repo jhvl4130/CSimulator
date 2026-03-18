@@ -1,32 +1,47 @@
+using CIWSSim.App;
 using CIWSSim.Core;
 using CIWSSim.Core.Geometry;
+using CIWSSim.Core.Util;
 using CIWSSim.Models;
 
-var engine = new Engine();
-int id = 1;
+// ── JSON 시나리오 로드 ──
+var jsonPath = args.Length > 0
+    ? args[0]
+    : Path.Combine(AppContext.BaseDirectory, "scenario.json");
 
-engine.AddAirplane(id++, 0, 5.0, 0, 2.0, 90.0, 0.0, 0.0);
-engine.AddAirplane(id++, 0, 7.0, 0, 1.2, 90.0, 0.0, 0.0);
-
-var building = new Building
+var config = FileIO.LoadJson<ScenarioConfig>(jsonPath);
+if (config is null)
 {
-    Polygon = new List<XYPos>
+    Logger.Err($"시나리오 파일을 읽을 수 없습니다: {jsonPath}\n");
+    return;
+}
+
+var engine = new Engine();
+
+// ── Origin 설정 ──
+engine.Origin = new LLHPos(config.Origin.Lat, config.Origin.Lon, config.Origin.Alt);
+
+// ── Airplane 등록 ──
+foreach (var ap in config.Airplanes)
+{
+    engine.AddAirplane(ap.Id,
+        new LLHPos(ap.Position.Lat, ap.Position.Lon, ap.Position.Alt),
+        ap.Speed, ap.Azimuth, ap.Elevation, ap.StartT);
+
+    foreach (var wp in ap.Waypoints)
     {
-        new(10, 10), new(20, 10), new(20, -10), new(10, -10)
-    },
-    Bottom = 0,
-    Top = 20
-};
-engine.AddAsset(id++, building);
+        engine.AddWaypointLLH(ap.Id, new LLHPos(wp.Lat, wp.Lon, wp.Alt), wp.Speed);
+    }
+}
 
-engine.AddLauncher(id++, 10000, 2, 0.5,
-    0.0, 1.3, 0.0, 100.0,
-    100.0, 100.0, 0.0,
-    90.0, 45.0, 3.0);
+// ── Building 등록 ──
+foreach (var bd in config.Buildings)
+{
+    engine.AddAssetRect(bd.Id,
+        new LLHPos(bd.Sw.Lat, bd.Sw.Lon, 0.0),
+        new LLHPos(bd.Ne.Lat, bd.Ne.Lon, 0.0),
+        bd.Bottom, bd.Top);
+}
 
-engine.AddLauncher(id++, 11000, 2, 0.5,
-    0.0, 1.3, 0.0, 100.0,
-    100.0, 100.0, 0.0,
-    90.0, 45.0, 5.0);
-
-engine.Start(100.0);
+// ── 시뮬레이션 실행 ──
+engine.Start(config.SimEndTime);

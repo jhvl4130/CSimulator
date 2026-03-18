@@ -9,7 +9,6 @@ namespace CIWSSim.Models;
 public class Airplane : Model
 {
     private readonly WaypointMover _mover = new();
-    private readonly List<StateRecord> _records = new();
 
     public Airplane(int id) : base(id)
     {
@@ -26,7 +25,6 @@ public class Airplane : Model
     {
         InitRuntimeVars();
         _mover.Reset();
-        _records.Clear();
 
         double tN = TInfinite;
 
@@ -67,15 +65,11 @@ public class Airplane : Model
 
                 bool reached = _mover.Step(this, MovePeriod);
 
-                // 상태 기록
-                _records.Add(new StateRecord(t, Id, Type, Pos, Pose));
-
                 if (reached && _mover.IsFinished(this))
                 {
                     Phase = SimPhase.End;
                     IsEnabled = false;
                     Logger.Dbg(DbgFlag.Move, $"[{Name}] 마지막 웨이포인트 도달\n");
-                    ExportCsv();
                     tN = TInfinite;
                     break;
                 }
@@ -109,14 +103,5 @@ public class Airplane : Model
     public override double ExtTrans(double t, SimEvent ev)
     {
         return TContinue;
-    }
-
-    private void ExportCsv()
-    {
-        var origin = Engine!.Origin;
-        var rows = _records.Select(r => r.ToCsvRow(origin));
-        var path = Path.Combine(Directory.GetCurrentDirectory(), $"{Name}_output.csv");
-        FileIO.SaveCsv(path, StateRecord.CsvHeader, rows);
-        Logger.Dbg($"[{Name}] CSV exported: {path}\n");
     }
 }

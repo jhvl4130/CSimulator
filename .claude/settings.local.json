@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(cd:*)",
-      "Bash(dotnet build:*)"
+      "Bash(dotnet build:*)",
+      "Bash(dotnet run:*)"
     ]
   }
 }

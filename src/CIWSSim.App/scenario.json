@@ -1,0 +1,56 @@
+{
+  "origin": {
+    "lat": 37.0,
+    "lon": 126.0,
+    "alt": 0.0
+  },
+  "simEndTime": 100.0,
+
+  "airplanes": [
+    {
+      "id": 1,
+      "position": { "lat": 37.0, "lon": 125.995, "alt": 500.0 },
+      "size": { "lengthX": 12.0, "widthY": 10.0, "heightZ": 4.0 },
+      "speed": 250.0,
+      "azimuth": 90.0,
+      "elevation": 0.0,
+      "startT": 0.0,
+      "waypoints": [
+        { "lat": 37.0, "lon": 125.998, "alt": 500.0, "speed": 250.0 },
+        { "lat": 37.0, "lon": 126.001, "alt": 300.0, "speed": 200.0 },
+        { "lat": 37.0, "lon": 126.003, "alt": 100.0, "speed": 200.0 }
+      ]
+    },
+    {
+      "id": 2,
+      "position": { "lat": 37.002, "lon": 125.996, "alt": 400.0 },
+      "size": { "lengthX": 8.0, "widthY": 6.0, "heightZ": 3.0 },
+      "speed": 200.0,
+      "azimuth": 120.0,
+      "elevation": 0.0,
+      "startT": 2.0,
+      "waypoints": [
+        { "lat": 37.001, "lon": 125.999, "alt": 350.0, "speed": 200.0 },
+        { "lat": 37.0005, "lon": 126.002, "alt": 200.0, "speed": 180.0 },
+        { "lat": 37.0, "lon": 126.003, "alt": 80.0, "speed": 180.0 }
+      ]
+    }
+  ],
+
+  "buildings": [
+    {
+      "id": 101,
+      "sw": { "lat": 36.99985, "lon": 126.00275 },
+      "ne": { "lat": 37.00015, "lon": 126.00325 },
+      "bottom": 0.0,
+      "top": 25.0
+    },
+    {
+      "id": 102,
+      "sw": { "lat": 36.9998, "lon": 126.0035 },
+      "ne": { "lat": 37.0002, "lon": 126.004 },
+      "bottom": 0.0,
+      "top": 30.0
+    }
+  ]
+}

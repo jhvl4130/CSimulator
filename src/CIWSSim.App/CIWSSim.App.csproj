@@ -8,6 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Update="scenario.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\CIWSSim.Core\CIWSSim.Core.csproj" />
     <ProjectReference Include="..\CIWSSim.Models\CIWSSim.Models.csproj" />
   </ItemGroup>
