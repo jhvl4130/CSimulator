@@ -19,7 +19,7 @@ public class Launcher : Model
 
     public Launcher(int id) : base(id)
     {
-        Class = SimClass.Platform;
+        Class = ModelClass.Platform;
         Type = MtLauncher;
         Name = $"Launcher-{id}";
     }
@@ -35,12 +35,12 @@ public class Launcher : Model
 
         if (StartT > 0.0)
         {
-            Phase = SimPhase.WaitStart;
+            Phase = PhaseType.WaitStart;
             tN = StartT;
         }
         else
         {
-            Phase = SimPhase.Run;
+            Phase = PhaseType.Run;
             if (RktNum > 0)
                 tN = FirePeriod;
         }
@@ -54,9 +54,9 @@ public class Launcher : Model
 
         switch (Phase)
         {
-            case SimPhase.WaitStart:
+            case PhaseType.WaitStart:
             {
-                Phase = SimPhase.Run;
+                Phase = PhaseType.Run;
                 if (RemainRkt > 0)
                 {
                     FireRocket();
@@ -64,7 +64,7 @@ public class Launcher : Model
                 }
                 break;
             }
-            case SimPhase.Run:
+            case PhaseType.Run:
             {
                 tN = FirePeriod;
                 if (RemainRkt > 0)

@@ -1,6 +1,6 @@
 namespace CIWSSim.Core;
 
-public enum SimClass
+public enum ModelClass
 {
     Platform = 0,
     Sensor = 1,
@@ -9,7 +9,7 @@ public enum SimClass
     Asset = 4
 }
 
-public enum SimPhase
+public enum PhaseType
 {
     WaitStart = 0,
     Run = 1,

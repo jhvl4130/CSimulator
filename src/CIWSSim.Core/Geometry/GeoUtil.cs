@@ -147,6 +147,24 @@ public static class GeoUtil
         return new Pose(azimuth, elevation, 0.0);
     }
 
+    // ── NED ↔ ENU 변환 ──
+
+    /// <summary>
+    /// NED → ENU 변환. (N,E,D) → (E,N,-D)
+    /// </summary>
+    public static XYZPos NedToEnu(in XYZPos ned)
+    {
+        return new XYZPos(ned.Y, ned.X, -ned.Z);
+    }
+
+    /// <summary>
+    /// ENU → NED 변환. (E,N,U) → (N,E,-U)
+    /// </summary>
+    public static XYZPos EnuToNed(in XYZPos enu)
+    {
+        return new XYZPos(enu.Y, enu.X, -enu.Z);
+    }
+
     // ── 좌표 변환 ──
 
     /// <summary>

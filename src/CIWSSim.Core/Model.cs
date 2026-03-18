@@ -7,7 +7,7 @@ public abstract class Model
 {
     public int Id { get; }
     public string Name { get; set; } = "";
-    public SimClass Class { get; set; }
+    public ModelClass Class { get; set; }
     public int Type { get; set; }
 
     public Engine? Engine { get; set; }
@@ -26,7 +26,7 @@ public abstract class Model
     public double Power { get; set; }
 
     // 런타임 값
-    public SimPhase Phase { get; set; } = SimPhase.Run;
+    public PhaseType Phase { get; set; } = PhaseType.Run;
     public double TA { get; set; }
 
     // 현 위치 및 이동 정보

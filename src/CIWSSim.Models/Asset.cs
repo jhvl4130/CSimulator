@@ -9,7 +9,7 @@ public class Asset : Model
 {
     public Asset(int id) : base(id)
     {
-        Class = SimClass.Asset;
+        Class = ModelClass.Asset;
         Type = MtAsset;
         Name = $"Asset-{id}";
     }
@@ -28,24 +28,19 @@ public class Asset : Model
 
     public override double ExtTrans(double t, SimEvent ev)
     {
-        switch (ev.Ev)
+        if (ev is CollideEvent col)
         {
-            case SimEvent.EvCollide:
+            Health -= col.Power;
+            if (Health < 0.0)
+                Health = 0.0;
+
+            Logger.Dbg(DbgFlag.Collide,
+                $"{t:F6} [{Name}] Collide : health={Health:F6} power={col.Power:F6}\n");
+
+            if (Health <= 0.0)
             {
-                var col = (CollideEvent)ev;
-                Health -= col.Power;
-                if (Health < 0.0)
-                    Health = 0.0;
-
-                Logger.Dbg(DbgFlag.Collide,
-                    $"{t:F6} [{Name}] Collide : health={Health:F6} power={col.Power:F6}\n");
-
-                if (Health <= 0.0)
-                {
-                    Logger.Dbg(DbgFlag.Collide, $"{t:F6} [{Name}] killed\n");
-                    IsEnabled = false;
-                }
-                break;
+                Logger.Dbg(DbgFlag.Collide, $"{t:F6} [{Name}] killed\n");
+                IsEnabled = false;
             }
         }
 

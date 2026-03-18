@@ -12,7 +12,7 @@ public class Airplane : Model
 
     public Airplane(int id) : base(id)
     {
-        Class = SimClass.Platform;
+        Class = ModelClass.Platform;
         Type = MtAirplane;
         Name = $"Airplane-{id}";
         Power = 50.0;
@@ -30,14 +30,14 @@ public class Airplane : Model
 
         if (StartT > 0.0)
         {
-            Phase = SimPhase.WaitStart;
+            Phase = PhaseType.WaitStart;
             IsEnabled = false;
             Speed = 0.0;
             tN = StartT;
         }
         else
         {
-            Phase = SimPhase.Run;
+            Phase = PhaseType.Run;
             IsEnabled = true;
             Speed = IniSpeed;
             tN = MovePeriod;
@@ -52,14 +52,14 @@ public class Airplane : Model
 
         switch (Phase)
         {
-            case SimPhase.WaitStart:
-                Phase = SimPhase.Run;
+            case PhaseType.WaitStart:
+                Phase = PhaseType.Run;
                 IsEnabled = true;
                 Speed = IniSpeed;
                 tN = MovePeriod;
                 break;
 
-            case SimPhase.Run:
+            case PhaseType.Run:
             {
                 tN = MovePeriod;
 
@@ -67,7 +67,7 @@ public class Airplane : Model
 
                 if (reached && _mover.IsFinished(this))
                 {
-                    Phase = SimPhase.End;
+                    Phase = PhaseType.End;
                     IsEnabled = false;
                     Logger.Dbg(DbgFlag.Move, $"[{Name}] 마지막 웨이포인트 도달\n");
                     tN = TInfinite;
