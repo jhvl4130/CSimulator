@@ -43,5 +43,15 @@ foreach (var bd in config.Buildings)
         bd.Bottom, bd.Top);
 }
 
+// ── Launcher 등록 ──
+foreach (var lc in config.Launchers)
+{
+    engine.AddLauncher(lc.Id, lc.StartRktId, lc.RktNum, lc.FirePeriod,
+        new LLHPos(lc.Position.Lat, lc.Position.Lon, lc.Position.Alt),
+        lc.Speed,
+        new LLHPos(lc.Gip.Lat, lc.Gip.Lon, lc.Gip.Alt),
+        lc.Azimuth, lc.Elevation, lc.StartT);
+}
+
 // ── 시뮬레이션 실행 ──
 engine.Start(config.SimEndTime);

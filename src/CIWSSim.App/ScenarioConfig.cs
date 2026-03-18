@@ -6,6 +6,7 @@ public class ScenarioConfig
     public double SimEndTime { get; set; } = 100.0;
     public List<AirplaneDto> Airplanes { get; set; } = new();
     public List<BuildingDto> Buildings { get; set; } = new();
+    public List<LauncherDto> Launchers { get; set; } = new();
 }
 
 public class OriginDto
@@ -56,4 +57,18 @@ public class WaypointDto
     public double Lon { get; set; }
     public double Alt { get; set; }
     public double Speed { get; set; }
+}
+
+public class LauncherDto
+{
+    public int Id { get; set; }
+    public PositionDto Position { get; set; } = new();
+    public PositionDto Gip { get; set; } = new();
+    public int StartRktId { get; set; }
+    public int RktNum { get; set; }
+    public double FirePeriod { get; set; }
+    public double Speed { get; set; }
+    public double Azimuth { get; set; }
+    public double Elevation { get; set; }
+    public double StartT { get; set; }
 }
