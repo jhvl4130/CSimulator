@@ -1,6 +1,6 @@
 namespace CIWSSim.Core;
 
-public enum ModelClass
+public enum SimClass
 {
     Platform = 0,
     Sensor = 1,
@@ -9,13 +9,16 @@ public enum ModelClass
     Asset = 4
 }
 
+public enum SimPhase
+{
+    WaitStart = 0,
+    Run = 1,
+    End = 2
+}
+
 public static class SimConstants
 {
     public const double MovePeriod = 0.01;
-
-    // Phase
-    public const int PhaseWaitStart = 0;
-    public const int PhaseRun = 1;
 
     public const int ClsNum = 5;
 

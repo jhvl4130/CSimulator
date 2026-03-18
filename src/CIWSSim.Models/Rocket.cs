@@ -12,7 +12,7 @@ public class Rocket : Model
 
     public Rocket(int id, XYZPos lp, XYZPos gip, double speed, double azi, double ele) : base(id)
     {
-        Class = ModelClass.Platform;
+        Class = SimClass.Platform;
         Type = MtRocket;
         Name = $"Rocket-{id}";
 
@@ -29,7 +29,7 @@ public class Rocket : Model
     {
         InitRuntimeVars();
 
-        Phase = PhaseRun;
+        Phase = SimPhase.Run;
         IsEnabled = true;
         Speed = IniSpeed;
 
@@ -44,7 +44,7 @@ public class Rocket : Model
 
         switch (Phase)
         {
-            case PhaseRun:
+            case SimPhase.Run:
                 tN = MovePeriod;
                 // move (placeholder - same as C++ original)
                 break;

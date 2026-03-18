@@ -9,7 +9,7 @@ public class Asset : Model
 {
     public Asset(int id) : base(id)
     {
-        Class = ModelClass.Asset;
+        Class = SimClass.Asset;
         Type = MtAsset;
         Name = $"Asset-{id}";
     }
