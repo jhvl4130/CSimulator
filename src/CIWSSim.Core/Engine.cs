@@ -1,5 +1,6 @@
 using CIWSSim.Core.Events;
 using CIWSSim.Core.Geometry;
+using CIWSSim.Core.Util;
 
 namespace CIWSSim.Core;
 
@@ -11,6 +12,9 @@ public class Engine
     private readonly List<Model> _assets = new();
 
     public double TL { get; private set; }
+
+    /// <summary>ENU 원점의 LLH 좌표. ENU→LLH 변환 시 사용.</summary>
+    public LLHPos Origin { get; set; }
 
     public List<Model> GetAssets() => _assets;
 

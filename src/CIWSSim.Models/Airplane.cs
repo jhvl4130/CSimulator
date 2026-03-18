@@ -1,12 +1,16 @@
 using CIWSSim.Core;
 using CIWSSim.Core.Events;
 using CIWSSim.Core.Geometry;
+using CIWSSim.Core.Util;
 using static CIWSSim.Core.SimConstants;
 
 namespace CIWSSim.Models;
 
 public class Airplane : Model
 {
+    private readonly WaypointMover _mover = new();
+    private readonly List<StateRecord> _records = new();
+
     public Airplane(int id) : base(id)
     {
         Class = ModelClass.Platform;
@@ -15,9 +19,14 @@ public class Airplane : Model
         Power = 50.0;
     }
 
+    /// <summary>WaypointMover 설정 접근용.</summary>
+    public WaypointMover Mover => _mover;
+
     public override double Init(double t)
     {
         InitRuntimeVars();
+        _mover.Reset();
+        _records.Clear();
 
         double tN = TInfinite;
 
@@ -47,21 +56,35 @@ public class Airplane : Model
         {
             case PhaseWaitStart:
                 Phase = PhaseRun;
+                IsEnabled = true;
+                Speed = IniSpeed;
                 tN = MovePeriod;
                 break;
 
             case PhaseRun:
             {
                 tN = MovePeriod;
-                // move
-                var pos = Pos;
-                pos.X += Speed * MovePeriod;
-                Pos = pos;
+
+                bool reached = _mover.Step(this, MovePeriod);
+
+                // 상태 기록
+                _records.Add(new StateRecord(t, Id, Type, Pos, Pose));
+
+                if (reached && _mover.IsFinished(this))
+                {
+                    Logger.Dbg(DbgFlag.Move, $"[{Name}] 마지막 웨이포인트 도달\n");
+                    ExportCsv();
+                    IsEnabled = false;
+                    tN = TInfinite;
+                    break;
+                }
 
                 Logger.Dbg(DbgFlag.Move,
-                    $"{t:F6} [{Name}] x={Pos.X:F6} y={Pos.Y:F6} z={Pos.Z:F6} speed={Speed:F6}\n");
+                    $"{t:F6} [{Name}] x={Pos.X:F2} y={Pos.Y:F2} z={Pos.Z:F2} " +
+                    $"yaw={Pose.Yaw:F2} pitch={Pose.Pitch:F2} speed={Speed:F2}\n");
 
-                // check collision
+                // 충돌 판정
+                var pos = Pos;
                 var assets = Engine!.GetAssets();
                 var ev = new CollideEvent(Power);
 
@@ -85,5 +108,14 @@ public class Airplane : Model
     public override double ExtTrans(double t, SimEvent ev)
     {
         return TContinue;
+    }
+
+    private void ExportCsv()
+    {
+        var origin = Engine!.Origin;
+        var rows = _records.Select(r => r.ToCsvRow(origin));
+        var path = Path.Combine(Directory.GetCurrentDirectory(), $"{Name}_output.csv");
+        FileIO.SaveCsv(path, StateRecord.CsvHeader, rows);
+        Logger.Dbg($"[{Name}] CSV exported: {path}\n");
     }
 }

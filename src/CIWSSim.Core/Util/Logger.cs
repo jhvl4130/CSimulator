@@ -1,4 +1,4 @@
-namespace CIWSSim.Core;
+namespace CIWSSim.Core.Util;
 
 [Flags]
 public enum DbgFlag : uint

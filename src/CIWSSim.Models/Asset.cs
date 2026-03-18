@@ -1,5 +1,6 @@
 using CIWSSim.Core;
 using CIWSSim.Core.Events;
+using CIWSSim.Core.Util;
 using static CIWSSim.Core.SimConstants;
 
 namespace CIWSSim.Models;
