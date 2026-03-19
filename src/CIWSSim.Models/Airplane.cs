@@ -77,22 +77,6 @@ public class Airplane : Model
                 Logger.Dbg(DbgFlag.Move,
                     $"{t:F6} [{Name}] x={Pos.X:F2} y={Pos.Y:F2} z={Pos.Z:F2} " +
                     $"yaw={Pose.Yaw:F2} pitch={Pose.Pitch:F2} speed={Speed:F2}\n");
-
-                // 충돌 판정
-                var pos = Pos;
-                var assets = Engine!.GetAssets();
-                var ev = new CollideEvent(Power);
-
-                foreach (var asset in assets)
-                {
-                    if (asset.IsEnabled && CollisionDetection.IsCollide(in pos, asset.Building))
-                    {
-                        Logger.Dbg(DbgFlag.Collide, $"{t:F6} [{Name}] Collide\n");
-                        IsEnabled = false;
-                        tN = TInfinite;
-                        Engine.SendEvent(asset, ev);
-                    }
-                }
                 break;
             }
         }
