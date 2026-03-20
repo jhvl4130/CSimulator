@@ -19,7 +19,7 @@ public static class EngineExtensions
             IniElevation = elevation,
             StartT = startT
         };
-        engine.RegisterPlatform(model);
+        engine.RegisterModel(model);
     }
 
     /// <summary>LLH 좌표로 Airplane 추가. 내부에서 ENU 변환.</summary>
@@ -124,7 +124,7 @@ public static class EngineExtensions
             IniElevation = elevation,
             StartT = startT
         };
-        engine.RegisterPlatform(model);
+        engine.RegisterModel(model);
     }
 
     /// <summary>LLH 좌표로 Launcher 추가.</summary>

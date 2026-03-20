@@ -18,10 +18,7 @@ public class Engine
     /// <summary>현재 버킷에서 IntTrans 또는 ExtTrans가 호출된 모델 (상태 기록 대상)</summary>
     private readonly HashSet<Model> _transitioned = new();
 
-    /// <summary>Platform 클래스 모델 목록 (충돌 판정 주체)</summary>
-    private readonly List<Model> _platforms = new();
-
-    /// <summary>충돌 판정 대상 모델 목록 (Weapon, Asset 등 Platform 외)</summary>
+    /// <summary>충돌 판정 대상 모델 목록 (Weapon, Asset 등)</summary>
     private readonly List<Model> _collidables = new();
     
     /// <summary>시뮬레이션 종료 시 CSV로 출력할 상태 기록 누적 리스트</summary>
@@ -100,9 +97,6 @@ public class Engine
                 }
             }
 
-            // 모든 IntTrans 완료 후 충돌 판정 일괄 수행
-            CheckCollisions();
-
             // IntTrans 또는 ExtTrans가 발생한 모델만 기록
             RecordTransitioned();
 
@@ -145,32 +139,6 @@ public class Engine
         _transitioned.Clear();
     }
 
-    private void CheckCollisions()
-    {
-        foreach (var platform in _platforms)
-        {
-            if (!platform.IsEnabled) continue;
-
-            foreach (var target in _collidables)
-            {
-                if (!target.IsEnabled) continue;
-                if (CollisionDetection.IsCollide(platform.Pos, target.Building))
-                {
-                    Logger.Dbg(DbgFlag.Collide,
-                        $"{TL:F6} [{platform.Name}] ↔ [{target.Name}] Collide\n");
-
-                    var ev = new CollideEvent(platform.Power);
-                    SendEvent(target, ev);
-
-                    platform.IsEnabled = false;
-                    platform.Phase = PhaseType.End;
-                    _transitioned.Add(platform);
-                    break;
-                }
-            }
-        }
-    }
-
     private void ExportCsv()
     {
         if (OutputPath is null || _records.Count == 0)
@@ -197,8 +165,6 @@ public class Engine
     {
         model.Engine = this;
         _modelMap[model.Id] = model;
-        if (model.Class == ModelClass.Platform)
-            _platforms.Add(model);
         double tA = model.Init(TL);
         model.TA = TL + tA;
         _schedTmp.Add(model);
@@ -208,12 +174,6 @@ public class Engine
     {
         model.Engine = this;
         _modelMap[model.Id] = model;
-    }
-
-    public void RegisterPlatform(Model model)
-    {
-        RegisterModel(model);
-        _platforms.Add(model);
     }
 
     public void RegisterCollidable(Model model)

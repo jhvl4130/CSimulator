@@ -47,6 +47,22 @@ public class Rocket : Model
             case PhaseType.Run:
                 tN = MovePeriod;
                 // move (placeholder - same as C++ original)
+
+                // 충돌 판정
+                foreach (var target in Engine!.GetCollidables())
+                {
+                    if (!target.IsEnabled) continue;
+                    if (CollisionDetection.IsCollide(Pos, target.Building))
+                    {
+                        Logger.Dbg(DbgFlag.Collide,
+                            $"{t:F6} [{Name}] ↔ [{target.Name}] Collide\n");
+                        Engine.SendEvent(target, new CollideEvent(Power));
+                        Phase = PhaseType.End;
+                        IsEnabled = false;
+                        tN = TInfinite;
+                        break;
+                    }
+                }
                 break;
         }
 

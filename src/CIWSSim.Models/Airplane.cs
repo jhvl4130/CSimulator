@@ -74,6 +74,23 @@ public class Airplane : Model
                     break;
                 }
 
+                // 충돌 판정
+                foreach (var target in Engine!.GetCollidables())
+                {
+                    if (!target.IsEnabled) continue;
+                    if (CollisionDetection.IsCollide(Pos, target.Building))
+                    {
+                        Logger.Dbg(DbgFlag.Collide,
+                            $"{t:F6} [{Name}] ↔ [{target.Name}] Collide\n");
+                        Engine.SendEvent(target, new CollideEvent(Power));
+                        Phase = PhaseType.End;
+                        IsEnabled = false;
+                        tN = TInfinite;
+                        break;
+                    }
+                }
+                if (!IsEnabled) break;
+
                 Logger.Dbg(DbgFlag.Move,
                     $"{t:F6} [{Name}] x={Pos.X:F2} y={Pos.Y:F2} z={Pos.Z:F2} " +
                     $"yaw={Pose.Yaw:F2} pitch={Pose.Pitch:F2} speed={Speed:F2}\n");
