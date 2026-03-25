@@ -12,7 +12,7 @@ public class Airplane : Model
 
     public Airplane(int id) : base(id)
     {
-        Class = ModelClass.Platform;
+        Class = ModelClass.Target;
         Type = MtAirplane;
         Name = $"Airplane-{id}";
         Power = 50.0;

@@ -2,7 +2,7 @@ namespace CIWSSim.Core;
 
 public enum ModelClass
 {
-    Platform = 0,
+    Target = 0,
     Sensor = 1,
     C2 = 2,
     Weapon = 3,
@@ -22,7 +22,7 @@ public static class SimConstants
 
     public const int ClsNum = 5;
 
-    // Model types - Platform
+    // Model types - Target
     public const int MtAirplane = 1;
     public const int MtMissile = 2;
     public const int MtUav = 3;

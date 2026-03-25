@@ -19,7 +19,7 @@ public class Launcher : Model
 
     public Launcher(int id) : base(id)
     {
-        Class = ModelClass.Platform;
+        Class = ModelClass.Target;
         Type = MtLauncher;
         Name = $"Launcher-{id}";
     }
