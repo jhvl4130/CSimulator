@@ -30,4 +30,21 @@ public static class CollisionDetection
 
         // 3단계: 정밀 다각형 판정 (Ray Casting)
         return IsPointInPolygon(pos.X, pos.Y, b.Polygon);
-    }}
+    }
+
+    /// <summary>
+    /// 점이 반구(상반구) 내부에 있는지 판정.
+    /// center의 Z를 바닥으로, 위쪽으로 radius만큼의 반구.
+    /// </summary>
+    public static bool IsInsideHemisphere(in XYZPos pos, in XYZPos center, double radius)
+    {
+        // 바닥 아래이면 false
+        if (pos.Z < center.Z)
+            return false;
+
+        double dx = pos.X - center.X;
+        double dy = pos.Y - center.Y;
+        double dz = pos.Z - center.Z;
+        return (dx * dx + dy * dy + dz * dz) <= (radius * radius);
+    }
+}

@@ -104,6 +104,30 @@ public static class EngineExtensions
         engine.RegisterCollidable(model);
     }
 
+    // ── AssetZone (반구 영역) ──
+
+    /// <summary>
+    /// ENU 좌표로 반구 방어 영역 추가. center가 반구 바닥 중심, radius가 반경.
+    /// </summary>
+    public static void AddAssetZone(this Engine engine, int id,
+        double x, double y, double z, double radius)
+    {
+        var model = new AssetZone(id)
+        {
+            IniPos = new XYZPos(x, y, z),
+            Radius = radius
+        };
+        engine.RegisterModel(model);
+    }
+
+    /// <summary>LLH 좌표로 반구 방어 영역 추가.</summary>
+    public static void AddAssetZone(this Engine engine, int id,
+        LLHPos centerLlh, double radius)
+    {
+        var enu = GeoUtil.LlaToEnu(centerLlh, engine.Origin);
+        engine.AddAssetZone(id, enu.X, enu.Y, enu.Z, radius);
+    }
+
     // ── Launcher ──
 
     public static void AddLauncher(this Engine engine, int id,

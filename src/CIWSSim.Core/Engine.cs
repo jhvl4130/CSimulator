@@ -34,6 +34,16 @@ public class Engine
 
     public List<Model> GetCollidables() => _collidables;
 
+    /// <summary>지정 클래스에 해당하는 활성 모델 목록 반환.</summary>
+    public IEnumerable<Model> GetModelsByClass(ModelClass cls)
+    {
+        foreach (var (_, model) in _modelMap)
+        {
+            if (model.Class == cls && model.IsEnabled)
+                yield return model;
+        }
+    }
+
     private void ScheduleModel(Model model, double time)
     {
         long t64 = (long)Math.Round(time * SimConstants.TScale);

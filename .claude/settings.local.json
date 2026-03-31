@@ -3,7 +3,8 @@
     "allow": [
       "Bash(cd:*)",
       "Bash(dotnet build:*)",
-      "Bash(dotnet run:*)"
+      "Bash(dotnet run:*)",
+      "Bash(rm:*)"
     ]
   }
 }

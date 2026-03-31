@@ -103,6 +103,12 @@ public class Airplane : Model
 
     public override double ExtTrans(double t, SimEvent ev)
     {
+        if (ev is CollideEvent)
+        {
+            Phase = PhaseType.End;
+            IsEnabled = false;
+            Logger.Dbg(DbgFlag.Collide, $"{t:F6} [{Name}] destroyed by defense zone\n");
+        }
         return TContinue;
     }
 }

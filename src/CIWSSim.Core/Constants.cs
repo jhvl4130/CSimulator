@@ -45,6 +45,7 @@ public static class SimConstants
 
     // Model types - Asset
     public const int MtAsset = 400;
+    public const int MtAssetZone = 401;
 
     // Time
     public const double TContinue = -1.0;
