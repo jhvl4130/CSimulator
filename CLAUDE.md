@@ -4,7 +4,7 @@
 
 ## 프로젝트 개요
 
-CIWSSim은 군사 방어 시나리오를 위한 3D 이산 사건 시뮬레이션입니다 (CIWS = Close-In Weapon System). 항공기, 로켓, 발사대(방사포), 방어 자산(건물)을 모델링하며 충돌 판정과 피해 처리를 수행합니다.
+CIWSSim은 군사 방어 시나리오를 위한 3D 이산 사건 시뮬레이션입니다 (CIWS = Close-In Weapon System). 항공기, 로켓, 발사대(방사포), 탄환, 방어 자산(건물/반구 방어존)을 모델링하며 충돌 판정과 피해 처리를 수행합니다.
 
 ## 빌드 및 실행
 
@@ -34,9 +34,12 @@ src/
 ├── CIWSSim.Models/          # 구체 모델 구현 (Core 의존)
 │   ├── Airplane.cs          # WaypointMover 기반 Fly-Over 이동
 │   ├── Asset.cs
+│   ├── AssetZone.cs         # 반구 영역 방어 모델 (점-반구 충돌 판정)
 │   ├── Rocket.cs
 │   ├── Launcher.cs
-│   └── EngineExtensions.cs  # 확장 메서드: LLH 입력 지원 (AddAirplane, AddAssetBox, AddAssetRect 등)
+│   ├── Bullet.cs            # 탄환 모델 (외부 궤적 보간 + 선분-AABB 충돌 판정)
+│   ├── BulletPoint.cs       # 탄환 궤적 데이터 구조체 (Time, Pos)
+│   └── EngineExtensions.cs  # 확장 메서드: LLH 입력 지원 (AddAirplane, AddAssetBox, AddBullet 등)
 └── CIWSSim.App/             # 콘솔 앱 (Core + Models 의존)
     ├── Program.cs           # JSON 로드 → Engine 등록 → 시뮬레이션 실행
     ├── ScenarioConfig.cs    # JSON DTO 클래스
@@ -61,7 +64,7 @@ scenario.json → FileIO.LoadJson<ScenarioConfig>()
 **시간 버킷 기반 이산 사건 시뮬레이션** 구현:
 - 모델들은 `SortedDictionary<long, List<Model>[]>`에 스케줄링 — 시간 버킷 + 클래스 우선순위 정렬
 - 시간은 부동소수점 비교 오류 방지를 위해 `TScale`(10M)을 곱해 `long`으로 변환
-- `Engine.Start()` 메인 루프: 가장 이른 시간 버킷을 꺼내 클래스 우선순위(Platform → Sensor → C2 → Weapon → Asset) 순으로 `IntTrans()` 호출 후 반환값에 따라 재스케줄링
+- `Engine.Start()` 메인 루프: 가장 이른 시간 버킷을 꺼내 클래스 우선순위(Target → Sensor → C2 → Weapon → Asset) 순으로 `IntTrans()` 호출 후 반환값에 따라 재스케줄링
 - 매 시간 버킷 처리 후 `RecordAll()`로 활성 모델 전체 상태 기록
 - 시뮬레이션 종료 시 `ExportCsv()`로 단일 CSV 출력
 - 이동 주기: `MovePeriod` = 0.01초
@@ -74,7 +77,7 @@ scenario.json → FileIO.LoadJson<ScenarioConfig>()
 - `IntTrans(t)` — 자율적 상태 전이 (이동, 발사 등), 다음 이벤트 시간 반환
 - `ExtTrans(t, event)` — 외부 이벤트에 대한 반응 (충돌 등)
 
-구체 모델: `Airplane`, `Rocket`, `Launcher`, `Asset`
+구체 모델: `Airplane`, `Rocket`, `Launcher`, `Bullet`, `Asset`, `AssetZone`
 
 Engine(Core)은 Models를 직접 참조하지 않으며, 모델 생성은 `EngineExtensions.cs`의 확장 메서드를 통해 수행합니다.
 
@@ -96,7 +99,26 @@ Engine(Core)은 Models를 직접 참조하지 않으며, 모델 생성은 `Engin
 
 ### 충돌 판정
 
-`CollisionDetection.IsCollide(XYZPos, Building)` — 3단계 판정: Z축 범위 → AABB(축 정렬 경계 상자) → 점-다각형 판정(Ray Casting). 건물은 2D 다각형 풋프린트를 bottom/top 높이로 돌출시킨 형태입니다.
+두 가지 충돌 판정 방식을 사용:
+
+| 충돌 유형 | 판정 방식 | 메서드 |
+|-----------|----------|--------|
+| 비행체/로켓 → 건물 | 점-다각형 (3단계: Z축→AABB→Ray Casting) | `IsCollide(XYZPos, Building)` |
+| 비행체 → 반구 방어존 | 점-반구 | `IsInsideHemisphere(XYZPos, XYZPos, radius)` |
+| 탄환 → 비행체 | 선분-AABB (Slab method) | `IsSegmentAABB(p0, p1, center, halfX/Y/Z)` |
+
+- **점 기반 판정**: 저속 물체(비행체 ~250m/s) vs 대형 대상(건물 수십m). 100Hz에서 충분한 정확도
+- **선분-AABB 판정**: 고속 탄환(~1000m/s+) vs 소형 대상(비행체 ~12m). 터널링 방지를 위해 이전 위치→현재 위치 선분으로 교차 판정
+- 비행체의 AABB는 `Model.HalfX/Y/Z`로 정의 (바운딩 박스 반크기)
+
+### Bullet (탄환) 모델
+
+외부 시스템에서 궤적 데이터(`List<BulletPoint>`)를 일괄 전달받아 동작:
+- 자체 이동 로직 없음 — 외부 궤적 데이터의 위치를 직접 사용
+- `MovePeriod`(100Hz)로 스케줄링되며, 시뮬레이션 시간과 궤적 시간이 불일치 시 **선형 보간**
+- 매 틱마다 이전 보간 위치 → 현재 보간 위치 선분으로 Target의 AABB와 충돌 판정
+- 궤적 소진 또는 명중 시 자동 종료
+- `AddRuntimeModel()`로 시뮬레이션 도중 동적 등록
 
 ### 이벤트 시스템
 
@@ -105,8 +127,8 @@ Engine(Core)은 Models를 직접 참조하지 않으며, 모델 생성은 `Engin
 ## 코딩 규칙
 
 - **네이밍**: C# PascalCase 사용. 설정 프로퍼티: `IniPos`, `IniSpeed`, `IniAzimuth`, `IniElevation`, `StartT`. 런타임: `Pos`, `Pose`, `Phase`, `TA`
-- **페이즈**: `SimPhase.WaitStart`, `SimPhase.Run`, `SimPhase.End`
-- **클래스**: `SimClass.Platform`, `SimClass.Sensor`, `SimClass.C2`, `SimClass.Weapon`, `SimClass.Asset`
+- **페이즈**: `PhaseType.WaitStart`, `PhaseType.Run`, `PhaseType.End`
+- **클래스**: `ModelClass.Target`, `ModelClass.Sensor`, `ModelClass.C2`, `ModelClass.Weapon`, `ModelClass.Asset`
 - **특수 시간값**: `TInfinite` = 더 이상 이벤트 없음, `TContinue` = 재스케줄링 생략
 - **로깅**: `Logger.Dbg(DbgFlag, msg)`, `Logger.Warn(msg)`, `Logger.Err(msg)` — 플래그: `DbgFlag.Init`, `DbgFlag.Move`, `DbgFlag.Collide` (namespace: `CIWSSim.Core.Util`)
 - **파일 입출력**: `FileIO.LoadJson<T>()`, `FileIO.SaveJson()`, `FileIO.SaveCsv()` (namespace: `CIWSSim.Core.Util`)

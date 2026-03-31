@@ -42,6 +42,7 @@ public static class SimConstants
     // Model types - Weapon
     public const int MtCiws = 300;
     public const int MtGun = 301;
+    public const int MtBullet = 302;
 
     // Model types - Asset
     public const int MtAsset = 400;

@@ -9,7 +9,8 @@ public static class EngineExtensions
 
     public static void AddAirplane(this Engine engine, int id,
         double x, double y, double z, double speed,
-        double azimuth, double elevation, double startT)
+        double azimuth, double elevation, double startT,
+        double sizeX = 0.0, double sizeY = 0.0, double sizeZ = 0.0)
     {
         var model = new Airplane(id)
         {
@@ -17,7 +18,10 @@ public static class EngineExtensions
             IniSpeed = speed,
             IniAzimuth = azimuth,
             IniElevation = elevation,
-            StartT = startT
+            StartT = startT,
+            HalfX = sizeX / 2.0,
+            HalfY = sizeY / 2.0,
+            HalfZ = sizeZ / 2.0
         };
         engine.RegisterModel(model);
     }
@@ -25,10 +29,12 @@ public static class EngineExtensions
     /// <summary>LLH 좌표로 Airplane 추가. 내부에서 ENU 변환.</summary>
     public static void AddAirplane(this Engine engine, int id,
         LLHPos llh, double speed,
-        double azimuth, double elevation, double startT)
+        double azimuth, double elevation, double startT,
+        double sizeX = 0.0, double sizeY = 0.0, double sizeZ = 0.0)
     {
         var enu = GeoUtil.LlaToEnu(llh, engine.Origin);
-        engine.AddAirplane(id, enu.X, enu.Y, enu.Z, speed, azimuth, elevation, startT);
+        engine.AddAirplane(id, enu.X, enu.Y, enu.Z, speed, azimuth, elevation, startT,
+            sizeX, sizeY, sizeZ);
     }
 
     // ── Waypoint ──
@@ -149,6 +155,19 @@ public static class EngineExtensions
             StartT = startT
         };
         engine.RegisterModel(model);
+    }
+
+    // ── Bullet ──
+
+    /// <summary>
+    /// 궤적 리스트로 Bullet 추가. 시뮬레이션 중 런타임 등록.
+    /// </summary>
+    public static void AddBullet(this Engine engine, int id,
+        List<BulletPoint> trajectory, double power = 10.0)
+    {
+        var model = new Bullet(id) { BulletPower = power };
+        model.SetTrajectory(trajectory);
+        engine.AddRuntimeModel(model);
     }
 
     /// <summary>LLH 좌표로 Launcher 추가.</summary>

@@ -25,6 +25,11 @@ public abstract class Model
 
     public double Power { get; set; }
 
+    // 바운딩 박스 반크기 (탄환-비행체 AABB 충돌 판정용)
+    public double HalfX { get; set; }
+    public double HalfY { get; set; }
+    public double HalfZ { get; set; }
+
     // 런타임 값
     public PhaseType Phase { get; set; } = PhaseType.Run;
     public double TA { get; set; }
