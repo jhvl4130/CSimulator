@@ -1,10 +1,10 @@
-using CIWSSim.Core;
-using CIWSSim.Core.Events;
-using CIWSSim.Core.Geometry;
-using CIWSSim.Core.Util;
-using static CIWSSim.Core.SimConstants;
+using CIWSSimulator.Core;
+using CIWSSimulator.Core.Events;
+using CIWSSimulator.Core.Geometry;
+using CIWSSimulator.Core.Util;
+using static CIWSSimulator.Core.SimConstants;
 
-namespace CIWSSim.Models;
+namespace CIWSSimulator.Models;
 
 /// <summary>
 /// 탐지 레이더. 탐지 범위 내 Target을 주기적으로 탐지하여

@@ -1,7 +1,7 @@
 using System.Text;
 using System.Text.Json;
 
-namespace CIWSSim.Core.Util;
+namespace CIWSSimulator.Core.Util;
 
 public static class FileIO
 {

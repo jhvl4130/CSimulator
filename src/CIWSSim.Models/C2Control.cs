@@ -1,10 +1,10 @@
 using System.Text;
-using CIWSSim.Core;
-using CIWSSim.Core.Events;
-using CIWSSim.Core.Util;
-using static CIWSSim.Core.SimConstants;
+using CIWSSimulator.Core;
+using CIWSSimulator.Core.Events;
+using CIWSSimulator.Core.Util;
+using static CIWSSimulator.Core.SimConstants;
 
-namespace CIWSSim.Models;
+namespace CIWSSimulator.Models;
 
 /// <summary>
 /// 통제소 (C2Control). 전체 시스템에 1개.

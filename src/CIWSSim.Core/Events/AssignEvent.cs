@@ -1,4 +1,4 @@
-namespace CIWSSim.Core.Events;
+namespace CIWSSimulator.Core.Events;
 
 /// <summary>C2Control → FCS: 표적 할당.</summary>
 public class AssignEvent : SimEvent

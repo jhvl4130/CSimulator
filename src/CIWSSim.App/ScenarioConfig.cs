@@ -1,4 +1,4 @@
-namespace CIWSSim.App;
+namespace CIWSSimulator.App;
 
 public class ScenarioConfig
 {

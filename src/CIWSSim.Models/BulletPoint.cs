@@ -1,6 +1,6 @@
-using CIWSSim.Core.Geometry;
+using CIWSSimulator.Core.Geometry;
 
-namespace CIWSSim.Models;
+namespace CIWSSimulator.Models;
 
 /// <summary>
 /// 외부에서 전달받는 탄환 궤적 데이터 한 점.

@@ -1,4 +1,4 @@
-namespace CIWSSim.Core.Events;
+namespace CIWSSimulator.Core.Events;
 
 /// <summary>EOTS → FCS: 정밀 추적 결과 (고각/방위각).</summary>
 public class EotsDataEvent : SimEvent

@@ -1,3 +1,3 @@
-namespace CIWSSim.Core.Events;
+namespace CIWSSimulator.Core.Events;
 
 public abstract class SimEvent { }

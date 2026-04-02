@@ -1,10 +1,10 @@
-using CIWSSim.Core;
-using CIWSSim.Core.Events;
-using CIWSSim.Core.Geometry;
-using CIWSSim.Core.Util;
-using static CIWSSim.Core.SimConstants;
+using CIWSSimulator.Core;
+using CIWSSimulator.Core.Events;
+using CIWSSimulator.Core.Geometry;
+using CIWSSimulator.Core.Util;
+using static CIWSSimulator.Core.SimConstants;
 
-namespace CIWSSim.Models;
+namespace CIWSSimulator.Models;
 
 /// <summary>
 /// 탄환 모델. 외부에서 궤적 리스트를 받아 시뮬레이션 시간에 맞춰

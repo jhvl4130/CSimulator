@@ -1,6 +1,6 @@
-using CIWSSim.Core.Geometry;
+using CIWSSimulator.Core.Geometry;
 
-namespace CIWSSim.Core.Events;
+namespace CIWSSimulator.Core.Events;
 
 /// <summary>TrackRadar → FCS: 추적 데이터 (위치/속도/가속도).</summary>
 public class TrackDataEvent : SimEvent

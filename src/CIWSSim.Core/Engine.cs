@@ -1,9 +1,9 @@
 using System.Text;
-using CIWSSim.Core.Events;
-using CIWSSim.Core.Geometry;
-using CIWSSim.Core.Util;
+using CIWSSimulator.Core.Events;
+using CIWSSimulator.Core.Geometry;
+using CIWSSimulator.Core.Util;
 
-namespace CIWSSim.Core;
+namespace CIWSSimulator.Core;
 
 public class Engine
 {

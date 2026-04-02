@@ -1,6 +1,6 @@
-using CIWSSim.Core.Geometry;
+using CIWSSimulator.Core.Geometry;
 
-namespace CIWSSim.Core.Events;
+namespace CIWSSimulator.Core.Events;
 
 /// <summary>SearchRadar → C2Control: 표적 탐지 보고.</summary>
 public class DetectEvent : SimEvent

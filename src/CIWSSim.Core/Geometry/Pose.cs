@@ -1,4 +1,4 @@
-namespace CIWSSim.Core.Geometry;
+namespace CIWSSimulator.Core.Geometry;
 
 public struct Pose
 {

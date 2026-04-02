@@ -1,4 +1,4 @@
-namespace CIWSSim.Core;
+namespace CIWSSimulator.Core;
 
 public enum ModelClass
 {

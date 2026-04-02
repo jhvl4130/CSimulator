@@ -1,7 +1,7 @@
-using CIWSSim.Core.Events;
-using CIWSSim.Core.Geometry;
+using CIWSSimulator.Core.Events;
+using CIWSSimulator.Core.Geometry;
 
-namespace CIWSSim.Core;
+namespace CIWSSimulator.Core;
 
 public abstract class Model
 {

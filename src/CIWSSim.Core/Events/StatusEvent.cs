@@ -1,4 +1,4 @@
-namespace CIWSSim.Core.Events;
+namespace CIWSSimulator.Core.Events;
 
 /// <summary>FCS → C2Control, Gun → FCS: 상태 보고.</summary>
 public class StatusEvent : SimEvent

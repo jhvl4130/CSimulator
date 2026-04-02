@@ -1,7 +1,7 @@
-using CIWSSim.Core;
-using CIWSSim.Core.Geometry;
+using CIWSSimulator.Core;
+using CIWSSimulator.Core.Geometry;
 
-namespace CIWSSim.Models;
+namespace CIWSSimulator.Models;
 
 public static class EngineExtensions
 {

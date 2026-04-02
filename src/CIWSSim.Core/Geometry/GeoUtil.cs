@@ -1,6 +1,6 @@
 using System;
 
-namespace CIWSSim.Core.Geometry;
+namespace CIWSSimulator.Core.Geometry;
 
 public static class GeoUtil
 {

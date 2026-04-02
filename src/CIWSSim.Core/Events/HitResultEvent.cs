@@ -1,4 +1,4 @@
-namespace CIWSSim.Core.Events;
+namespace CIWSSimulator.Core.Events;
 
 /// <summary>Gun → FCS: 탄환 명중 결과.</summary>
 public class HitResultEvent : SimEvent

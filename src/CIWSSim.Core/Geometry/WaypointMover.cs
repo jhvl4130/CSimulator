@@ -1,6 +1,6 @@
 using System;
 
-namespace CIWSSim.Core.Geometry;
+namespace CIWSSimulator.Core.Geometry;
 
 /// <summary>
 /// 웨이포인트 기반 Fly-Over 이동 로직.

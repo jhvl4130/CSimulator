@@ -1,10 +1,10 @@
-using CIWSSim.Core;
-using CIWSSim.Core.Events;
-using CIWSSim.Core.Geometry;
-using CIWSSim.Core.Util;
-using static CIWSSim.Core.SimConstants;
+using CIWSSimulator.Core;
+using CIWSSimulator.Core.Events;
+using CIWSSimulator.Core.Geometry;
+using CIWSSimulator.Core.Util;
+using static CIWSSimulator.Core.SimConstants;
 
-namespace CIWSSim.Models;
+namespace CIWSSimulator.Models;
 
 /// <summary>
 /// 광학 추적 장비 (EOTS). FCS 명령에 따라 종속 추적하여

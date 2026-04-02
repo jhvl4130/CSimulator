@@ -1,6 +1,6 @@
-using CIWSSim.Core.Geometry;
+using CIWSSimulator.Core.Geometry;
 
-namespace CIWSSim.Core.Util;
+namespace CIWSSimulator.Core.Util;
 
 /// <summary>
 /// 모델의 한 시점 상태 기록. CSV 출력용.

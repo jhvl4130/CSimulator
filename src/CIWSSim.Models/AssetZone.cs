@@ -1,10 +1,10 @@
-using CIWSSim.Core;
-using CIWSSim.Core.Events;
-using CIWSSim.Core.Geometry;
-using CIWSSim.Core.Util;
-using static CIWSSim.Core.SimConstants;
+using CIWSSimulator.Core;
+using CIWSSimulator.Core.Events;
+using CIWSSimulator.Core.Geometry;
+using CIWSSimulator.Core.Util;
+using static CIWSSimulator.Core.SimConstants;
 
-namespace CIWSSim.Models;
+namespace CIWSSimulator.Models;
 
 /// <summary>
 /// 반구 영역 방어 모델. 표적이 반구에 진입하면 요격 실패로 판정하고

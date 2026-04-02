@@ -1,8 +1,8 @@
-using CIWSSim.App;
-using CIWSSim.Core;
-using CIWSSim.Core.Geometry;
-using CIWSSim.Core.Util;
-using CIWSSim.Models;
+using CIWSSimulator.App;
+using CIWSSimulator.Core;
+using CIWSSimulator.Core.Geometry;
+using CIWSSimulator.Core.Util;
+using CIWSSimulator.Models;
 
 // ── JSON 시나리오 로드 ──
 var jsonPath = args.Length > 0

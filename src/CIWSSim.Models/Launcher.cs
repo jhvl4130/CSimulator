@@ -1,9 +1,9 @@
-using CIWSSim.Core;
-using CIWSSim.Core.Events;
-using CIWSSim.Core.Geometry;
-using static CIWSSim.Core.SimConstants;
+using CIWSSimulator.Core;
+using CIWSSimulator.Core.Events;
+using CIWSSimulator.Core.Geometry;
+using static CIWSSimulator.Core.SimConstants;
 
-namespace CIWSSim.Models;
+namespace CIWSSimulator.Models;
 
 public class Launcher : Model
 {

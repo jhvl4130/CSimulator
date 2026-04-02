@@ -1,4 +1,4 @@
-namespace CIWSSim.Core.Events;
+namespace CIWSSimulator.Core.Events;
 
 public class CollideEvent : SimEvent
 {

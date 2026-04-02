@@ -1,6 +1,6 @@
-using CIWSSim.Core.Geometry;
+using CIWSSimulator.Core.Geometry;
 
-namespace CIWSSim.Core.Events;
+namespace CIWSSimulator.Core.Events;
 
 /// <summary>FCS → Gun: 사격 명령.</summary>
 public class FireCmdEvent : SimEvent

@@ -1,4 +1,4 @@
-namespace CIWSSim.Core.Events;
+namespace CIWSSimulator.Core.Events;
 
 /// <summary>FCS → TrackRadar: 표적 추적 명령.</summary>
 public class TrackCmdEvent : SimEvent

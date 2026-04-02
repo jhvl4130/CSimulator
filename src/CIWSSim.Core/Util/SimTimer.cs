@@ -1,6 +1,6 @@
 using System.Diagnostics;
 
-namespace CIWSSim.Core.Util;
+namespace CIWSSimulator.Core.Util;
 
 /// <summary>
 /// 시뮬레이션 실행 시간 측정 유틸리티.
