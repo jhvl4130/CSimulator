@@ -7,13 +7,16 @@ using static CIWSSim.Core.SimConstants;
 namespace CIWSSim.Models;
 
 /// <summary>
-/// 반구 영역 방어 모델. 중심점과 반경으로 정의된 반구 내에
-/// Target이 진입하면 충돌 판정을 수행한다.
+/// 반구 영역 방어 모델. 표적이 반구에 진입하면 요격 실패로 판정하고
+/// C2Control에 FailEvent를 전달한다.
 /// </summary>
 public class AssetZone : Model
 {
     /// <summary>반구 반경 (m).</summary>
     public double Radius { get; set; }
+
+    /// <summary>C2Control 참조 (생성 시 주입).</summary>
+    public Model? C2 { get; set; }
 
     public AssetZone(int id) : base(id)
     {
@@ -41,25 +44,16 @@ public class AssetZone : Model
             if (CollisionDetection.IsInsideHemisphere(target.Pos, Pos, Radius))
             {
                 Logger.Dbg(DbgFlag.Collide,
-                    $"{t:F6} [{Name}] ↔ [{target.Name}] Collide (hemisphere)\n");
+                    $"{t:F6} [{Name}] ↔ [{target.Name}] Intercept FAILED (reached zone)\n");
 
-                // Target에 충돌 이벤트 전송 → Target 파괴
-                Engine.SendEvent(target, new CollideEvent(target.Power));
-
-                // AssetZone도 피해를 받음
-                Health -= target.Power;
-                if (Health < 0.0)
-                    Health = 0.0;
-
-                Logger.Dbg(DbgFlag.Collide,
-                    $"{t:F6} [{Name}] health={Health:F6} power={target.Power:F6}\n");
-
-                if (Health <= 0.0)
+                // C2Control에 요격 실패 보고
+                if (C2 is not null)
                 {
-                    Logger.Dbg(DbgFlag.Collide, $"{t:F6} [{Name}] killed\n");
-                    IsEnabled = false;
-                    return TInfinite;
+                    Engine.SendEvent(C2, new FailEvent(target));
                 }
+
+                // 표적 파괴 (방어존 도달 = 피해 발생)
+                Engine.SendEvent(target, new CollideEvent(target.Power));
             }
         }
 
@@ -68,22 +62,6 @@ public class AssetZone : Model
 
     public override double ExtTrans(double t, SimEvent ev)
     {
-        if (ev is CollideEvent col)
-        {
-            Health -= col.Power;
-            if (Health < 0.0)
-                Health = 0.0;
-
-            Logger.Dbg(DbgFlag.Collide,
-                $"{t:F6} [{Name}] Collide : health={Health:F6} power={col.Power:F6}\n");
-
-            if (Health <= 0.0)
-            {
-                Logger.Dbg(DbgFlag.Collide, $"{t:F6} [{Name}] killed\n");
-                IsEnabled = false;
-            }
-        }
-
         return TContinue;
     }
 }

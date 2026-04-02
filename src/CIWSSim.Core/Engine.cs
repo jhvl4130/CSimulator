@@ -1,3 +1,4 @@
+using System.Text;
 using CIWSSim.Core.Events;
 using CIWSSim.Core.Geometry;
 using CIWSSim.Core.Util;
@@ -20,9 +21,12 @@ public class Engine
 
     /// <summary>충돌 판정 대상 모델 목록 (Weapon, Asset 등)</summary>
     private readonly List<Model> _collidables = new();
-    
-    /// <summary>시뮬레이션 종료 시 CSV로 출력할 상태 기록 누적 리스트</summary>
-    private readonly List<StateRecord> _records = new();
+
+    /// <summary>CSV 스트리밍 출력용 StreamWriter</summary>
+    private StreamWriter? _csvWriter;
+
+    /// <summary>현재 버킷에서 제거 요청된 모델 ID</summary>
+    private readonly List<int> _removeQueue = new();
 
     public double TL { get; private set; }
 
@@ -33,6 +37,9 @@ public class Engine
     public string? OutputPath { get; set; } = "output.csv";
 
     public List<Model> GetCollidables() => _collidables;
+
+    /// <summary>ID로 모델 조회. 없으면 null.</summary>
+    public Model? GetModel(int id) => _modelMap.GetValueOrDefault(id);
 
     /// <summary>지정 클래스에 해당하는 활성 모델 목록 반환.</summary>
     public IEnumerable<Model> GetModelsByClass(ModelClass cls)
@@ -71,7 +78,13 @@ public class Engine
     public void Start(double endT = SimConstants.TInfinite)
     {
         TL = 0.0;
-        _records.Clear();
+
+        // CSV 스트리밍 출력 초기화
+        if (OutputPath is not null)
+        {
+            _csvWriter = new StreamWriter(OutputPath, false, Encoding.UTF8);
+            _csvWriter.WriteLine(string.Join(',', StateRecord.CsvHeader));
+        }
 
         Logger.Dbg("Simulation Start\n");
 
@@ -107,7 +120,7 @@ public class Engine
                 }
             }
 
-            // IntTrans 또는 ExtTrans가 발생한 모델만 기록
+            // IntTrans 또는 ExtTrans가 발생한 모델만 기록 (스트리밍)
             RecordTransitioned();
 
             _schedMap.Remove(tKey);
@@ -122,6 +135,9 @@ public class Engine
             }
             _schedTmp.Clear();
 
+            // 제거 요청된 모델 처리
+            ProcessRemoveQueue();
+
             if (TL >= endT)
             {
                 Logger.Dbg($"Simulation end : time = {TL:F6}\n");
@@ -134,29 +150,28 @@ public class Engine
             Logger.Dbg($"Simulation end : time = {TL:F6}\n");
         }
 
-        ExportCsv();
+        // CSV 스트리밍 종료
+        _csvWriter?.Dispose();
+        _csvWriter = null;
     }
 
     private void RecordTransitioned()
     {
+        if (_csvWriter is null)
+        {
+            _transitioned.Clear();
+            return;
+        }
+
         foreach (var model in _transitioned)
         {
             if (model.IsEnabled)
             {
-                _records.Add(new StateRecord(TL, model.Id, model.Type, model.Pos, model.Pose));
+                var record = new StateRecord(TL, model.Id, model.Type, model.Pos, model.Pose);
+                _csvWriter.WriteLine(string.Join(',', record.ToCsvRow(Origin)));
             }
         }
         _transitioned.Clear();
-    }
-
-    private void ExportCsv()
-    {
-        if (OutputPath is null || _records.Count == 0)
-            return;
-
-        var rows = _records.Select(r => r.ToCsvRow(Origin));
-        FileIO.SaveCsv(OutputPath, StateRecord.CsvHeader, rows);
-        Logger.Dbg($"CSV exported: {OutputPath} ({_records.Count} records)\n");
     }
 
     public void SendEvent(Model model, SimEvent ev)
@@ -178,6 +193,28 @@ public class Engine
         double tA = model.Init(TL);
         model.TA = TL + tA;
         _schedTmp.Add(model);
+    }
+
+    /// <summary>모델 제거 요청. 현재 버킷 처리 후 일괄 제거됨.</summary>
+    public void RemoveModel(int id)
+    {
+        _removeQueue.Add(id);
+    }
+
+    private void ProcessRemoveQueue()
+    {
+        if (_removeQueue.Count == 0) return;
+
+        foreach (var id in _removeQueue)
+        {
+            if (_modelMap.TryGetValue(id, out var model))
+            {
+                RemoveModelFromSchedule(model);
+                _modelMap.Remove(id);
+                _collidables.Remove(model);
+            }
+        }
+        _removeQueue.Clear();
     }
 
     public void RegisterModel(Model model)

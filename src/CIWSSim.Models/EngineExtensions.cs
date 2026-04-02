@@ -183,4 +183,122 @@ public static class EngineExtensions
             gip.X, gip.Y, gip.Z,
             azimuth, elevation, startT);
     }
+
+    // ── SearchRadar ──
+
+    public static SearchRadar AddSearchRadar(this Engine engine, int id,
+        LLHPos posLlh, double detectRange, double detectPeriod)
+    {
+        var enu = GeoUtil.LlaToEnu(posLlh, engine.Origin);
+        var model = new SearchRadar(id)
+        {
+            IniPos = enu,
+            DetectRange = detectRange,
+            DetectPeriod = detectPeriod
+        };
+        engine.RegisterModel(model);
+        return model;
+    }
+
+    // ── C2Control ──
+
+    public static C2Control AddC2Control(this Engine engine, int id,
+        string? eventLogPath = "event_log.csv")
+    {
+        var model = new C2Control(id)
+        {
+            EventLogPath = eventLogPath
+        };
+        engine.RegisterModel(model);
+        return model;
+    }
+
+    // ── CIWS 세트 (FCS + TrackRadar + EOTS + Gun) ──
+
+    /// <summary>
+    /// CIWS 1세트를 생성하고 상호 참조를 연결한다.
+    /// 반환: (FCS, TrackRadar, EOTS, Gun)
+    /// </summary>
+    public static (FCS fcs, TrackRadar trackRadar, Eots eots, Gun gun) AddCIWS(
+        this Engine engine, int ciwsId, LLHPos posLlh,
+        double trackPeriod, double eotsTrackPeriod,
+        double fireRange,
+        double rpm, double bulletSpeed, double bulletPower,
+        int ammo, double slewRate,
+        C2Control c2)
+    {
+        var enu = GeoUtil.LlaToEnu(posLlh, engine.Origin);
+
+        // ID 규칙: CIWS ID 기준으로 하위 모델 ID 생성
+        int fcsId = ciwsId;
+        int trackRadarId = ciwsId + 1;
+        int eotsId = ciwsId + 2;
+        int gunId = ciwsId + 3;
+
+        var fcs = new FCS(fcsId)
+        {
+            IniPos = enu,
+            FireRange = fireRange,
+            CiwsId = ciwsId
+        };
+
+        var trackRadar = new TrackRadar(trackRadarId)
+        {
+            IniPos = enu,
+            TrackPeriod = trackPeriod
+        };
+
+        var eots = new Eots(eotsId)
+        {
+            IniPos = enu
+        };
+
+        var gun = new Gun(gunId)
+        {
+            IniPos = enu,
+            Rpm = rpm,
+            BulletSpeed = bulletSpeed,
+            BulletPower = bulletPower,
+            Ammo = ammo,
+            SlewRate = slewRate
+        };
+        gun.SetBulletIdStart(ciwsId * 10000);
+
+        // 상호 참조 연결
+        fcs.TrackRadar = trackRadar;
+        fcs.EotsModel = eots;
+        fcs.GunModel = gun;
+        fcs.C2 = c2;
+
+        trackRadar.Fcs = fcs;
+        eots.Fcs = fcs;
+        gun.Fcs = fcs;
+
+        // Engine 등록
+        engine.RegisterModel(fcs);
+        engine.RegisterModel(trackRadar);
+        engine.RegisterModel(eots);
+        engine.RegisterModel(gun);
+
+        // C2에 FCS 등록
+        c2.FcsList.Add(fcs);
+
+        return (fcs, trackRadar, eots, gun);
+    }
+
+    // ── AssetZone (C2 참조 포함) ──
+
+    /// <summary>LLH 좌표로 반구 방어 영역 추가 (C2 참조 포함).</summary>
+    public static void AddAssetZone(this Engine engine, int id,
+        LLHPos centerLlh, double radius, C2Control? c2)
+    {
+        var enu = GeoUtil.LlaToEnu(centerLlh, engine.Origin);
+        var model = new AssetZone(id)
+        {
+            IniPos = enu,
+            Radius = radius,
+            C2 = c2
+        };
+        engine.RegisterModel(model);
+    }
 }

@@ -11,9 +11,21 @@ public enum ModelClass
 
 public enum PhaseType
 {
+    // 공통
     WaitStart = 0,
     Run = 1,
-    End = 2
+    End = 2,
+
+    // FCS 전용
+    Wait = 10,
+    StartEngage = 11,
+    TrackRcvd = 12,
+    FireOn = 13,
+    FireOff = 14,
+    TgtDestroyed = 15,
+    AttackedAlive = 16,
+    AttackedDie = 17,
+    Disabled = 18,
 }
 
 public static class SimConstants

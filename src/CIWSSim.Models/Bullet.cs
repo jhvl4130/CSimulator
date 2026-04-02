@@ -28,6 +28,9 @@ public class Bullet : Model
         Name = $"Bullet-{id}";
     }
 
+    /// <summary>소속 FCS 참조 (명중 결과 보고용).</summary>
+    public Model? Fcs { get; set; }
+
     /// <summary>궤적 데이터 일괄 설정. 시간 오름차순 정렬되어 있어야 함.</summary>
     public void SetTrajectory(IEnumerable<BulletPoint> points)
     {
@@ -38,12 +41,20 @@ public class Bullet : Model
     /// 시뮬레이션 시간 t에 해당하는 궤적 위치를 보간하여 반환.
     /// 커서를 t 이하인 마지막 궤적 점까지 전진시킨 뒤,
     /// cursor와 cursor+1 사이를 선형 보간.
+    /// 소비된 궤적 포인트는 trim하여 메모리 해제.
     /// </summary>
     private XYZPos Interpolate(double t)
     {
         // 커서를 t에 맞게 전진
         while (_cursor < _trajectory.Count - 2 && _trajectory[_cursor + 1].Time <= t)
             _cursor++;
+
+        // 소비된 궤적 포인트 trim (cursor-1 이전 제거)
+        if (_cursor > 1)
+        {
+            _trajectory.RemoveRange(0, _cursor - 1);
+            _cursor = 1;
+        }
 
         // 궤적 끝에 도달한 경우 마지막 점 반환
         if (_cursor >= _trajectory.Count - 1)
@@ -98,8 +109,7 @@ public class Bullet : Model
         // 궤적 시간 범위를 벗어나면 종료
         if (t > _trajectory[^1].Time)
         {
-            Phase = PhaseType.End;
-            IsEnabled = false;
+            EndBullet(false, 0);
             return TInfinite;
         }
 
@@ -122,9 +132,7 @@ public class Bullet : Model
                     Logger.Dbg(DbgFlag.Collide,
                         $"{t:F6} [{Name}] → [{target.Name}] Hit\n");
                     Engine.SendEvent(target, new CollideEvent(BulletPower));
-
-                    Phase = PhaseType.End;
-                    IsEnabled = false;
+                    EndBullet(true, target.Id);
                     return TInfinite;
                 }
             }
@@ -142,5 +150,24 @@ public class Bullet : Model
     public override double ExtTrans(double t, SimEvent ev)
     {
         return TContinue;
+    }
+
+    private void EndBullet(bool isHit, int targetId)
+    {
+        Phase = PhaseType.End;
+        IsEnabled = false;
+
+        // FCS에 명중 결과 보고
+        if (Fcs is not null)
+        {
+            Engine!.SendEvent(Fcs, new HitResultEvent(targetId, isHit,
+                isHit ? BulletPower : 0.0));
+        }
+
+        // 궤적 데이터 해제
+        _trajectory.Clear();
+
+        // Engine에서 모델 제거 (메모리 해제)
+        Engine?.RemoveModel(Id);
     }
 }

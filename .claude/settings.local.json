@@ -4,7 +4,11 @@
       "Bash(cd:*)",
       "Bash(dotnet build:*)",
       "Bash(dotnet run:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(find src:*)",
+      "Bash(while read:*)",
+      "Bash(do sed:*)",
+      "Bash(done)"
     ]
   }
 }
