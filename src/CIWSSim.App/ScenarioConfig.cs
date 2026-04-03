@@ -5,7 +5,6 @@ public class ScenarioConfig
     public OriginDto Origin { get; set; } = new();
     public double SimEndTime { get; set; } = 100.0;
     public List<AirplaneDto> Airplanes { get; set; } = new();
-    public List<BuildingDto> Buildings { get; set; } = new();
     public List<LauncherDto> Launchers { get; set; } = new();
     public SearchRadarDto? SearchRadar { get; set; }
     public C2Dto? C2 { get; set; }
@@ -30,15 +29,6 @@ public class AirplaneDto
     public double Elevation { get; set; }
     public double StartT { get; set; }
     public List<WaypointDto> Waypoints { get; set; } = new();
-}
-
-public class BuildingDto
-{
-    public int Id { get; set; }
-    public PositionDto Sw { get; set; } = new();
-    public PositionDto Ne { get; set; } = new();
-    public double Bottom { get; set; }
-    public double Top { get; set; }
 }
 
 public class PositionDto

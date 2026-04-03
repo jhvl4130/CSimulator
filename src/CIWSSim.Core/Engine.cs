@@ -1,4 +1,3 @@
-using System.Text;
 using CIWSSimulator.Core.Events;
 using CIWSSimulator.Core.Geometry;
 using CIWSSimulator.Core.Util;
@@ -19,12 +18,6 @@ public class Engine
     /// <summary>현재 버킷에서 IntTrans 또는 ExtTrans가 호출된 모델 (상태 기록 대상)</summary>
     private readonly HashSet<Model> _transitioned = new();
 
-    /// <summary>충돌 판정 대상 모델 목록 (Weapon, Asset 등)</summary>
-    private readonly List<Model> _collidables = new();
-
-    /// <summary>CSV 스트리밍 출력용 StreamWriter</summary>
-    private StreamWriter? _csvWriter;
-
     /// <summary>현재 버킷에서 제거 요청된 모델 ID</summary>
     private readonly List<int> _removeQueue = new();
 
@@ -32,11 +25,6 @@ public class Engine
 
     /// <summary>ENU 원점의 LLH 좌표. ENU→LLH 변환 시 사용.</summary>
     public LLHPos Origin { get; set; }
-
-    /// <summary>CSV 출력 경로. null이면 출력하지 않음.</summary>
-    public string? OutputPath { get; set; } = "output.csv";
-
-    public List<Model> GetCollidables() => _collidables;
 
     /// <summary>ID로 모델 조회. 없으면 null.</summary>
     public Model? GetModel(int id) => _modelMap.GetValueOrDefault(id);
@@ -50,6 +38,9 @@ public class Engine
                 yield return model;
         }
     }
+
+    /// <summary>매 틱 상태 기록 콜백. 외부에서 CSV 출력 등을 연결.</summary>
+    public Action<double, Model>? OnModelTransitioned { get; set; }
 
     private void ScheduleModel(Model model, double time)
     {
@@ -78,13 +69,6 @@ public class Engine
     public void Start(double endT = SimConstants.TInfinite)
     {
         TL = 0.0;
-
-        // CSV 스트리밍 출력 초기화
-        if (OutputPath is not null)
-        {
-            _csvWriter = new StreamWriter(OutputPath, false, Encoding.UTF8);
-            _csvWriter.WriteLine(string.Join(',', StateRecord.CsvHeader));
-        }
 
         Logger.Dbg("Simulation Start\n");
 
@@ -120,8 +104,8 @@ public class Engine
                 }
             }
 
-            // IntTrans 또는 ExtTrans가 발생한 모델만 기록 (스트리밍)
-            RecordTransitioned();
+            // 상태 기록 콜백 호출
+            NotifyTransitioned();
 
             _schedMap.Remove(tKey);
 
@@ -149,15 +133,11 @@ public class Engine
         {
             Logger.Dbg($"Simulation end : time = {TL:F6}\n");
         }
-
-        // CSV 스트리밍 종료
-        _csvWriter?.Dispose();
-        _csvWriter = null;
     }
 
-    private void RecordTransitioned()
+    private void NotifyTransitioned()
     {
-        if (_csvWriter is null)
+        if (OnModelTransitioned is null)
         {
             _transitioned.Clear();
             return;
@@ -167,8 +147,7 @@ public class Engine
         {
             if (model.IsEnabled)
             {
-                var record = new StateRecord(TL, model.Id, model.Type, model.Pos, model.Pose);
-                _csvWriter.WriteLine(string.Join(',', record.ToCsvRow(Origin)));
+                OnModelTransitioned(TL, model);
             }
         }
         _transitioned.Clear();
@@ -211,7 +190,6 @@ public class Engine
             {
                 RemoveModelFromSchedule(model);
                 _modelMap.Remove(id);
-                _collidables.Remove(model);
             }
         }
         _removeQueue.Clear();
@@ -221,21 +199,5 @@ public class Engine
     {
         model.Engine = this;
         _modelMap[model.Id] = model;
-    }
-
-    public void RegisterCollidable(Model model)
-    {
-        RegisterModel(model);
-        _collidables.Add(model);
-    }
-
-    public void AddWaypoint(int id, double x, double y, double z, double speed)
-    {
-        if (!_modelMap.TryGetValue(id, out var model))
-        {
-            Logger.Warn($"AddWaypoint: No target for ID '{id}'\n");
-            return;
-        }
-        model.AddWaypoint(new XYZWayp(x, y, z, speed));
     }
 }

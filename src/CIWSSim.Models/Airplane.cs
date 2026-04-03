@@ -75,7 +75,7 @@ public class Airplane : Model
                 }
 
                 // 충돌 판정
-                foreach (var target in Engine!.GetCollidables())
+                foreach (var target in Engine!.GetModelsByClass(ModelClass.Asset))
                 {
                     if (!target.IsEnabled) continue;
                     if (CollisionDetection.IsCollide(Pos, target.Building))

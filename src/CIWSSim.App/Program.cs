@@ -1,3 +1,4 @@
+using System.Text;
 using CIWSSimulator.App;
 using CIWSSimulator.Core;
 using CIWSSimulator.Core.Geometry;
@@ -20,6 +21,16 @@ var engine = new Engine();
 
 // ── Origin 설정 ──
 engine.Origin = new LLHPos(config.Origin.Lat, config.Origin.Lon, config.Origin.Alt);
+
+// ── CSV 스트리밍 출력 설정 ──
+using var csvWriter = new StreamWriter("output.csv", false, Encoding.UTF8);
+csvWriter.WriteLine(string.Join(',', StateRecord.CsvHeader));
+
+engine.OnModelTransitioned = (time, model) =>
+{
+    var record = new StateRecord(time, model.Id, model.Type, model.Pos, model.Pose);
+    csvWriter.WriteLine(string.Join(',', record.ToCsvRow(engine.Origin)));
+};
 
 // ── C2Control 등록 ──
 C2Control? c2 = null;
@@ -79,15 +90,6 @@ foreach (var ap in config.Airplanes)
     {
         engine.AddWaypointLLH(ap.Id, new LLHPos(wp.Lat, wp.Lon, wp.Alt), wp.Speed);
     }
-}
-
-// ── Building 등록 ──
-foreach (var bd in config.Buildings)
-{
-    engine.AddAssetRect(bd.Id,
-        new LLHPos(bd.Sw.Lat, bd.Sw.Lon, 0.0),
-        new LLHPos(bd.Ne.Lat, bd.Ne.Lon, 0.0),
-        bd.Bottom, bd.Top);
 }
 
 // ── Launcher 등록 ──

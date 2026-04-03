@@ -1,5 +1,6 @@
 using CIWSSimulator.Core;
 using CIWSSimulator.Core.Geometry;
+using CIWSSimulator.Core.Util;
 
 namespace CIWSSimulator.Models;
 
@@ -44,70 +45,13 @@ public static class EngineExtensions
         LLHPos llh, double speed)
     {
         var enu = GeoUtil.LlaToEnu(llh, engine.Origin);
-        engine.AddWaypoint(id, enu.X, enu.Y, enu.Z, speed);
-    }
-
-    // ── Asset (직육면체: 센터 LLH + 크기) ──
-
-    /// <summary>
-    /// 센터 LLH + 길이(X)/넓이(Y)/높이(Z)로 직육면체 Asset 추가.
-    /// 길이·넓이는 ENU 기준 미터 단위.
-    /// </summary>
-    public static void AddAssetBox(this Engine engine, int id,
-        LLHPos centerLlh, double lengthX, double widthY, double heightZ)
-    {
-        var c = GeoUtil.LlaToEnu(centerLlh, engine.Origin);
-        var hx = lengthX / 2.0;
-        var hy = widthY / 2.0;
-
-        var building = new Building
+        var model = engine.GetModel(id);
+        if (model is null)
         {
-            Polygon = new List<XYPos>
-            {
-                new(c.X - hx, c.Y - hy),
-                new(c.X + hx, c.Y - hy),
-                new(c.X + hx, c.Y + hy),
-                new(c.X - hx, c.Y + hy),
-            },
-            Bottom = c.Z,
-            Top = c.Z + heightZ
-        };
-        engine.AddAsset(id, building);
-    }
-
-    // ── Asset (Building: 사각형 꼭짓점 LLH + Top/Bottom) ──
-
-    /// <summary>
-    /// 사각형 대각선 두 꼭짓점(SW, NE)의 LLH + 해발고도(Bottom) + 건물높이(Top)로 Building Asset 추가.
-    /// </summary>
-    public static void AddAssetRect(this Engine engine, int id,
-        LLHPos swLlh, LLHPos neLlh, double bottom, double top)
-    {
-        var sw = GeoUtil.LlaToEnu(swLlh, engine.Origin);
-        var ne = GeoUtil.LlaToEnu(neLlh, engine.Origin);
-
-        var building = new Building
-        {
-            Polygon = new List<XYPos>
-            {
-                new(sw.X, sw.Y),
-                new(ne.X, sw.Y),
-                new(ne.X, ne.Y),
-                new(sw.X, ne.Y),
-            },
-            Bottom = bottom,
-            Top = top
-        };
-        engine.AddAsset(id, building);
-    }
-
-    // ── Asset (기존 Building 직접 전달) ──
-
-    public static void AddAsset(this Engine engine, int id, Building building)
-    {
-        var model = new Asset(id);
-        model.SetBuilding(building);
-        engine.RegisterCollidable(model);
+            Logger.Warn($"AddWaypointLLH: No model for ID '{id}'\n");
+            return;
+        }
+        model.AddWaypoint(new XYZWayp(enu.X, enu.Y, enu.Z, speed));
     }
 
     // ── AssetZone (반구 영역) ──

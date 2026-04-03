@@ -15,6 +15,9 @@ public class AssetZone : Model
     /// <summary>반구 반경 (m).</summary>
     public double Radius { get; set; }
 
+    /// <summary>방어존에 진입한 표적 수.</summary>
+    public int HitCount { get; private set; }
+
     /// <summary>C2Control 참조 (생성 시 주입).</summary>
     public Model? C2 { get; set; }
 
@@ -53,6 +56,7 @@ public class AssetZone : Model
                 }
 
                 // 표적 파괴 (방어존 도달 = 피해 발생)
+                HitCount++;
                 Engine.SendEvent(target, new CollideEvent(target.Power));
             }
         }
