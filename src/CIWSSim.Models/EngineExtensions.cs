@@ -153,9 +153,9 @@ public static class EngineExtensions
     /// CIWS 1세트를 생성하고 상호 참조를 연결한다.
     /// 반환: (FCS, TrackRadar, EOTS, Gun)
     /// </summary>
-    public static (FCS fcs, TrackRadar trackRadar, Eots eots, Gun gun) AddCIWS(
+    public static (FCS fcs, TrackRadar trackRadar, Gun gun) AddCIWS(
         this Engine engine, int ciwsId, LLHPos posLlh,
-        double trackPeriod, double eotsTrackPeriod,
+        double trackPeriod,
         double fireRange,
         double rpm, double bulletSpeed, double bulletPower,
         int ammo, double slewRate,
@@ -166,8 +166,7 @@ public static class EngineExtensions
         // ID 규칙: CIWS ID 기준으로 하위 모델 ID 생성
         int fcsId = ciwsId;
         int trackRadarId = ciwsId + 1;
-        int eotsId = ciwsId + 2;
-        int gunId = ciwsId + 3;
+        int gunId = ciwsId + 2;
 
         var fcs = new FCS(fcsId)
         {
@@ -180,11 +179,6 @@ public static class EngineExtensions
         {
             IniPos = enu,
             TrackPeriod = trackPeriod
-        };
-
-        var eots = new Eots(eotsId)
-        {
-            IniPos = enu
         };
 
         var gun = new Gun(gunId)
@@ -200,24 +194,21 @@ public static class EngineExtensions
 
         // 상호 참조 연결
         fcs.TrackRadar = trackRadar;
-        fcs.EotsModel = eots;
         fcs.GunModel = gun;
         fcs.C2 = c2;
 
         trackRadar.Fcs = fcs;
-        eots.Fcs = fcs;
         gun.Fcs = fcs;
 
         // Engine 등록
         engine.RegisterModel(fcs);
         engine.RegisterModel(trackRadar);
-        engine.RegisterModel(eots);
         engine.RegisterModel(gun);
 
         // C2에 FCS 등록
         c2.FcsList.Add(fcs);
 
-        return (fcs, trackRadar, eots, gun);
+        return (fcs, trackRadar, gun);
     }
 
     // ── AssetZone (C2 참조 포함) ──

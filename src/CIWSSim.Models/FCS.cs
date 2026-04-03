@@ -21,7 +21,6 @@ public class FCS : Model
 
     // ── 참조 (생성 시 주입) ──
     public Model? TrackRadar { get; set; }
-    public Model? EotsModel { get; set; }
     public Model? GunModel { get; set; }
     public Model? C2 { get; set; }
 
@@ -66,9 +65,6 @@ public class FCS : Model
 
             case TrackDataEvent trackData:
                 return HandleTrackData(t, trackData);
-
-            case EotsDataEvent eotsData:
-                return HandleEotsData(t, eotsData);
 
             case HitResultEvent hitResult:
                 return HandleHitResult(t, hitResult);
@@ -121,47 +117,43 @@ public class FCS : Model
 
         _trackPos = ev.Pos;
         _trackVel = ev.Vel;
-        Phase = PhaseType.TrackRcvd;
 
-        // EOTS에 종속 추적 명령
-        if (EotsModel is not null)
-        {
-            Engine!.SendEvent(EotsModel, new EotsCmdEvent(ev.Pos));
-        }
-
-        return TContinue;
-    }
-
-    private double HandleEotsData(double t, EotsDataEvent ev)
-    {
         if (_target is null || !_target.IsEnabled)
             return TContinue;
 
-        if (Phase == PhaseType.TrackRcvd)
+        // 방위각/고각 계산
+        double azimuth = GeoUtil.Bearing(Pos, _trackPos);
+        double dx = _trackPos.X - Pos.X;
+        double dy = _trackPos.Y - Pos.Y;
+        double dz = _trackPos.Z - Pos.Z;
+        double dist2D = Math.Sqrt(dx * dx + dy * dy);
+        double elevation = GeoUtil.RadToDeg(Math.Atan2(dz, dist2D));
+        double dist = GeoUtil.Distance(Pos, _trackPos);
+
+        if (Phase == PhaseType.StartEngage || Phase == PhaseType.TrackRcvd)
         {
-            // 사격 가능 거리 판단
-            double dist = GeoUtil.Distance(Pos, _trackPos);
+            Phase = PhaseType.TrackRcvd;
+
             if (dist <= FireRange)
             {
                 Phase = PhaseType.FireOn;
                 Logger.Dbg(DbgFlag.Collide,
                     $"{t:F6} [{Name}] FireOn [{_target.Name}] dist={dist:F1}m\n");
 
-                // Gun에 사격 명령
                 if (GunModel is not null)
                 {
                     Engine!.SendEvent(GunModel,
-                        new FireCmdEvent(ev.Azimuth, ev.Elevation, _target));
+                        new FireCmdEvent(azimuth, elevation, _target));
                 }
             }
         }
         else if (Phase == PhaseType.FireOn)
         {
-            // 교전 중 조준 갱신: Gun에 새 사격 명령
+            // 교전 중 조준 갱신
             if (GunModel is not null)
             {
                 Engine!.SendEvent(GunModel,
-                    new FireCmdEvent(ev.Azimuth, ev.Elevation, _target));
+                    new FireCmdEvent(azimuth, elevation, _target));
             }
         }
 

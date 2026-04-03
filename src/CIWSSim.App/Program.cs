@@ -51,7 +51,6 @@ foreach (var ciws in config.Ciws)
     engine.AddCIWS(ciws.Id,
         new LLHPos(ciws.Position.Lat, ciws.Position.Lon, ciws.Position.Alt),
         ciws.TrackRadar.TrackPeriod,
-        ciws.Eots.TrackPeriod,
         ciws.Fcs.FireRange,
         ciws.Gun.Rpm, ciws.Gun.BulletSpeed, ciws.Gun.BulletPower,
         ciws.Gun.Ammo, ciws.Gun.SlewRate,

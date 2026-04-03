@@ -81,17 +81,11 @@ public class CiwsDto
     public int Id { get; set; }
     public PositionDto Position { get; set; } = new();
     public TrackRadarDto TrackRadar { get; set; } = new();
-    public EotsDto Eots { get; set; } = new();
     public FcsDto Fcs { get; set; } = new();
     public GunDto Gun { get; set; } = new();
 }
 
 public class TrackRadarDto
-{
-    public double TrackPeriod { get; set; } = 0.04;
-}
-
-public class EotsDto
 {
     public double TrackPeriod { get; set; } = 0.04;
 }
