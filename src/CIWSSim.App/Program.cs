@@ -95,11 +95,9 @@ foreach (var ap in config.Airplanes)
 // ── Launcher 등록 ──
 foreach (var lc in config.Launchers)
 {
-    engine.AddLauncher(lc.Id, lc.StartRktId, lc.RktNum, lc.FirePeriod,
+    engine.AddLauncher(lc.Id,
         new LLHPos(lc.Position.Lat, lc.Position.Lon, lc.Position.Alt),
-        lc.Speed,
-        new LLHPos(lc.Gip.Lat, lc.Gip.Lon, lc.Gip.Alt),
-        lc.Azimuth, lc.Elevation, lc.StartT);
+        lc.Speed, lc.Azimuth, lc.Elevation, lc.StartT);
 }
 
 // ── 시뮬레이션 실행 ──

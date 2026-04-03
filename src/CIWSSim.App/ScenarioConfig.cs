@@ -57,10 +57,6 @@ public class LauncherDto
 {
     public int Id { get; set; }
     public PositionDto Position { get; set; } = new();
-    public PositionDto Gip { get; set; } = new();
-    public int StartRktId { get; set; }
-    public int RktNum { get; set; }
-    public double FirePeriod { get; set; }
     public double Speed { get; set; }
     public double Azimuth { get; set; }
     public double Elevation { get; set; }

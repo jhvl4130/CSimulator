@@ -67,9 +67,8 @@ public class Airplane : Model
 
                 if (reached && _mover.IsFinished(this))
                 {
-                    Phase = PhaseType.End;
-                    IsEnabled = false;
                     Logger.Dbg(DbgFlag.Move, $"[{Name}] 마지막 웨이포인트 도달\n");
+                    EndTarget();
                     tN = TInfinite;
                     break;
                 }
@@ -83,8 +82,7 @@ public class Airplane : Model
                         Logger.Dbg(DbgFlag.Collide,
                             $"{t:F6} [{Name}] ↔ [{target.Name}] Collide\n");
                         Engine.SendEvent(target, new CollideEvent(Power));
-                        Phase = PhaseType.End;
-                        IsEnabled = false;
+                        EndTarget();
                         tN = TInfinite;
                         break;
                     }
@@ -105,10 +103,16 @@ public class Airplane : Model
     {
         if (ev is CollideEvent)
         {
-            Phase = PhaseType.End;
-            IsEnabled = false;
             Logger.Dbg(DbgFlag.Collide, $"{t:F6} [{Name}] destroyed by defense zone\n");
+            EndTarget();
         }
         return TContinue;
+    }
+
+    private void EndTarget()
+    {
+        Phase = PhaseType.End;
+        IsEnabled = false;
+        Engine?.RemoveModel(Id);
     }
 }

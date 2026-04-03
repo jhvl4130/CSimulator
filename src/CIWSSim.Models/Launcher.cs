@@ -8,10 +8,8 @@ namespace CIWSSimulator.Models;
 public class Launcher : Model
 {
     // 설정 파라미터
-    public int RktNum { get; set; }
-    public double FirePeriod { get; set; }
-    public int StartRktId { get; set; }
-    public XYZPos Gip { get; set; }
+    public int RktNum { get; set; } = 3;
+    public double FirePeriod { get; set; } = 0.5;
 
     // 런타임 변수
     public int RemainRkt { get; set; }
@@ -29,7 +27,7 @@ public class Launcher : Model
         InitRuntimeVars();
 
         RemainRkt = RktNum;
-        RktId = StartRktId;
+        RktId = Id * 10000;
 
         double tN = TInfinite;
 
@@ -87,7 +85,7 @@ public class Launcher : Model
 
     private void FireRocket()
     {
-        var rocket = new Rocket(RktId, IniPos, Gip, Speed, IniAzimuth, IniElevation);
+        var rocket = new Rocket(RktId, IniPos, Speed, IniAzimuth, IniElevation);
         Engine!.AddRuntimeModel(rocket);
         RktId++;
         RemainRkt--;

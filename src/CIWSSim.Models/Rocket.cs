@@ -8,16 +8,13 @@ namespace CIWSSimulator.Models;
 
 public class Rocket : Model
 {
-    public XYZPos Gip { get; set; }
-
-    public Rocket(int id, XYZPos lp, XYZPos gip, double speed, double azi, double ele) : base(id)
+    public Rocket(int id, XYZPos lp, double speed, double azi, double ele) : base(id)
     {
         Class = ModelClass.Target;
         Type = MtRocket;
         Name = $"Rocket-{id}";
 
         IniPos = lp;
-        Gip = gip;
         IniSpeed = speed;
         IniAzimuth = azi;
         IniElevation = ele;
@@ -46,7 +43,6 @@ public class Rocket : Model
         {
             case PhaseType.Run:
                 tN = MovePeriod;
-                // move (placeholder - same as C++ original)
 
                 // 충돌 판정
                 foreach (var target in Engine!.GetModelsByClass(ModelClass.Asset))
@@ -57,8 +53,7 @@ public class Rocket : Model
                         Logger.Dbg(DbgFlag.Collide,
                             $"{t:F6} [{Name}] ↔ [{target.Name}] Collide\n");
                         Engine.SendEvent(target, new CollideEvent(Power));
-                        Phase = PhaseType.End;
-                        IsEnabled = false;
+                        EndTarget();
                         tN = TInfinite;
                         break;
                     }
@@ -73,10 +68,16 @@ public class Rocket : Model
     {
         if (ev is CollideEvent)
         {
-            Phase = PhaseType.End;
-            IsEnabled = false;
             Logger.Dbg(DbgFlag.Collide, $"{t:F6} [{Name}] destroyed by defense zone\n");
+            EndTarget();
         }
         return TContinue;
+    }
+
+    private void EndTarget()
+    {
+        Phase = PhaseType.End;
+        IsEnabled = false;
+        Engine?.RemoveModel(Id);
     }
 }

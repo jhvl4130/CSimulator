@@ -81,19 +81,13 @@ public static class EngineExtensions
     // ── Launcher ──
 
     public static void AddLauncher(this Engine engine, int id,
-        int startRktId, int rktNum, double period,
         double x, double y, double z, double speed,
-        double gipX, double gipY, double gipZ,
         double azimuth, double elevation, double startT)
     {
         var model = new Launcher(id)
         {
-            StartRktId = startRktId,
-            RktNum = rktNum,
-            FirePeriod = period,
             IniPos = new XYZPos(x, y, z),
             IniSpeed = speed,
-            Gip = new XYZPos(gipX, gipY, gipZ),
             IniAzimuth = azimuth,
             IniElevation = elevation,
             StartT = startT
@@ -116,15 +110,11 @@ public static class EngineExtensions
 
     /// <summary>LLH 좌표로 Launcher 추가.</summary>
     public static void AddLauncher(this Engine engine, int id,
-        int startRktId, int rktNum, double period,
-        LLHPos posLlh, double speed, LLHPos gipLlh,
+        LLHPos posLlh, double speed,
         double azimuth, double elevation, double startT)
     {
         var pos = GeoUtil.LlaToEnu(posLlh, engine.Origin);
-        var gip = GeoUtil.LlaToEnu(gipLlh, engine.Origin);
-        engine.AddLauncher(id, startRktId, rktNum, period,
-            pos.X, pos.Y, pos.Z, speed,
-            gip.X, gip.Y, gip.Z,
+        engine.AddLauncher(id, pos.X, pos.Y, pos.Z, speed,
             azimuth, elevation, startT);
     }
 
