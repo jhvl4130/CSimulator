@@ -140,21 +140,22 @@ public class FCS : Model
                 Logger.Dbg(DbgFlag.Collide,
                     $"{t:F6} [{Name}] FireOn [{_target.Name}] dist={dist:F1}m\n");
 
-                if (GunModel is not null)
-                {
-                    Engine!.SendEvent(GunModel,
-                        new FireCmdEvent(azimuth, elevation, _target));
-                }
+                // TODO: 프로토타입에서는 사격 비활성화
+                // if (GunModel is not null)
+                // {
+                //     Engine!.SendEvent(GunModel,
+                //         new FireCmdEvent(azimuth, elevation, _target));
+                // }
             }
         }
         else if (Phase == PhaseType.FireOn)
         {
-            // 교전 중 조준 갱신
-            if (GunModel is not null)
-            {
-                Engine!.SendEvent(GunModel,
-                    new FireCmdEvent(azimuth, elevation, _target));
-            }
+            // TODO: 프로토타입에서는 조준 갱신 비활성화
+            // if (GunModel is not null)
+            // {
+            //     Engine!.SendEvent(GunModel,
+            //         new FireCmdEvent(azimuth, elevation, _target));
+            // }
         }
 
         return TContinue;

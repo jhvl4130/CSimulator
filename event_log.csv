@@ -1,0 +1,4 @@
+﻿Time,EventType,SourceID,TargetID,CiwsID,Detail
+1.0000,Assign,500,1,300,"Target 1 assigned to CIWS 300"
+1.0000,Assign,500,2,310,"Target 2 assigned to CIWS 310"
+1.0000,Assign,500,3,320,"Target 3 assigned to CIWS 320"

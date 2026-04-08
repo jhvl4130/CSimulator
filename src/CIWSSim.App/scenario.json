@@ -46,5 +46,24 @@
       "elevation": 45.0,
       "startT": 3.0
     }
+  ],
+
+  "c2": { "id": 500 },
+
+  "searchRadar": {
+    "id": 100,
+    "position": { "lat": 37.0, "lon": 126.0, "alt": 0.0 },
+    "detectRange": 10000.0,
+    "detectPeriod": 1.0
+  },
+
+  "ciws": [
+    {
+      "id": 300,
+      "position": { "lat": 37.0, "lon": 126.0, "alt": 0.0 },
+      "trackRadar": { "trackPeriod": 0.04 },
+      "fcs": { "fireRange": 1500.0 },
+      "gun": { "rpm": 4500, "bulletSpeed": 1000, "bulletPower": 10, "ammo": 1000, "slewRate": 60 }
+    }
   ]
 }

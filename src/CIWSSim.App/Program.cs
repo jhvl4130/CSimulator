@@ -5,22 +5,61 @@ using CIWSSimulator.Core.Geometry;
 using CIWSSimulator.Core.Util;
 using CIWSSimulator.Models;
 
-// ── JSON 시나리오 로드 ──
+// ── input.json 로드 ──
 var jsonPath = args.Length > 0
     ? args[0]
-    : Path.Combine(AppContext.BaseDirectory, "scenario.json");
+    : Path.Combine(AppContext.BaseDirectory, "input.json");
 
-var config = FileIO.LoadJson<ScenarioConfig>(jsonPath);
-if (config is null)
+var input = FileIO.LoadJson<InputConfig>(jsonPath);
+if (input is null)
 {
-    Logger.Err($"시나리오 파일을 읽을 수 없습니다: {jsonPath}\n");
+    Logger.Err($"입력 파일을 읽을 수 없습니다: {jsonPath}\n");
     return;
 }
 
-var engine = new Engine();
+// ── tag별 데이터 분류 ──
+var ciwsItems = input.Records
+    .FirstOrDefault(r => r.Tag == "CombatPlatform.Ciws")?.Items ?? new();
+var targetItems = input.Records
+    .FirstOrDefault(r => r.Tag == "CombatPlatform.Target.Aircraft")?.Items ?? new();
+var areaRecord = input.Records
+    .FirstOrDefault(r => r.Tag == "Area");
 
-// ── Origin 설정 ──
-engine.Origin = new LLHPos(config.Origin.Lat, config.Origin.Lon, config.Origin.Alt);
+// ── Origin 결정: Area가 있으면 사용, 없으면 CIWS 중심점 ──
+LLHPos origin;
+if (areaRecord is not null && areaRecord.Items.Count > 0)
+{
+    var a = areaRecord.Items[0].Position;
+    origin = new LLHPos(a.Latitude, a.Longitude, a.Height);
+}
+else if (ciwsItems.Count > 0)
+{
+    double latSum = 0, lonSum = 0, altSum = 0;
+    foreach (var c in ciwsItems)
+    {
+        latSum += c.Position.Latitude;
+        lonSum += c.Position.Longitude;
+        altSum += c.Position.Height;
+    }
+    origin = new LLHPos(latSum / ciwsItems.Count, lonSum / ciwsItems.Count, altSum / ciwsItems.Count);
+}
+else
+{
+    Logger.Err("Origin을 결정할 수 없습니다.\n");
+    return;
+}
+
+// ── 프로토타입 상수 ──
+const double SimEndTime = 180.0;       // 3분
+const double DefaultSpeed = 200.0;     // m/s
+const double DetectRange = 10000.0;    // 탐지 거리 (m)
+const double DetectPeriod = 1.0;       // 탐지 주기 (초)
+const double TrackPeriod = 0.04;       // 추적 주기 (25Hz)
+const double FireRange = 1500.0;       // 사격 거리 (m)
+const double AssetRadius = 2000.0;     // 방어 영역 반경 (m)
+
+var engine = new Engine();
+engine.Origin = origin;
 
 // ── CSV 스트리밍 출력 설정 ──
 using var csvWriter = new StreamWriter("output.csv", false, Encoding.UTF8);
@@ -33,74 +72,41 @@ engine.OnModelTransitioned = (time, model) =>
 };
 
 // ── C2Control 등록 ──
-C2Control? c2 = null;
-if (config.C2 is not null)
-{
-    c2 = engine.AddC2Control(config.C2.Id);
-}
+var c2 = engine.AddC2Control(500);
 
-// ── CIWS 세트 등록 ──
-foreach (var ciws in config.Ciws)
+// ── CIWS 세트 등록 (input의 CIWS 위치 사용) ──
+int ciwsBaseId = 300;
+foreach (var ciws in ciwsItems)
 {
-    if (c2 is null)
-    {
-        Logger.Err("CIWS requires C2 to be configured\n");
-        return;
-    }
-
-    engine.AddCIWS(ciws.Id,
-        new LLHPos(ciws.Position.Lat, ciws.Position.Lon, ciws.Position.Alt),
-        ciws.TrackRadar.TrackPeriod,
-        ciws.Fcs.FireRange,
-        ciws.Gun.Rpm, ciws.Gun.BulletSpeed, ciws.Gun.BulletPower,
-        ciws.Gun.Ammo, ciws.Gun.SlewRate,
+    var pos = new LLHPos(ciws.Position.Latitude, ciws.Position.Longitude, ciws.Position.Height);
+    engine.AddCIWS(ciwsBaseId, pos,
+        TrackPeriod, FireRange,
+        4500, 1000, 10, 1000, 60,
         c2);
+    ciwsBaseId += 10;
 }
 
-// ── SearchRadar 등록 ──
-if (config.SearchRadar is not null)
-{
-    var sr = engine.AddSearchRadar(config.SearchRadar.Id,
-        new LLHPos(config.SearchRadar.Position.Lat,
-                   config.SearchRadar.Position.Lon,
-                   config.SearchRadar.Position.Alt),
-        config.SearchRadar.DetectRange,
-        config.SearchRadar.DetectPeriod);
-    sr.C2 = c2;
-}
+// ── SearchRadar 등록 (원점 위치) ──
+var sr = engine.AddSearchRadar(100, origin, DetectRange, DetectPeriod);
+sr.C2 = c2;
 
-// ── AssetZone 등록 ──
-foreach (var az in config.AssetZones)
-{
-    engine.AddAssetZone(az.Id,
-        new LLHPos(az.Position.Lat, az.Position.Lon, az.Position.Alt),
-        az.Radius, c2);
-}
+// ── AssetZone 등록 (원점 기준, 반경 2000m) ──
+engine.AddAssetZone(900, origin, AssetRadius, c2);
 
-// ── Airplane 등록 ──
-foreach (var ap in config.Airplanes)
+// ── Airplane 등록 (input의 Target 데이터 사용) ──
+int tgtBaseId = 1;
+foreach (var tgt in targetItems)
 {
-    engine.AddAirplane(ap.Id,
-        new LLHPos(ap.Position.Lat, ap.Position.Lon, ap.Position.Alt),
-        ap.Speed, ap.Azimuth, ap.Elevation, ap.StartT,
-        ap.Size.LengthX, ap.Size.WidthY, ap.Size.HeightZ);
+    var pos = new LLHPos(tgt.Position.Latitude, tgt.Position.Longitude, tgt.Position.Height);
+    double azimuth = tgt.Rotation.Yaw;
+    double elevation = tgt.Rotation.Pitch;
 
-    foreach (var wp in ap.Waypoints)
-    {
-        engine.AddWaypointLLH(ap.Id, new LLHPos(wp.Lat, wp.Lon, wp.Alt), wp.Speed);
-    }
-}
-
-// ── Launcher 등록 ──
-foreach (var lc in config.Launchers)
-{
-    engine.AddLauncher(lc.Id,
-        new LLHPos(lc.Position.Lat, lc.Position.Lon, lc.Position.Alt),
-        lc.Speed, lc.Azimuth, lc.Elevation, lc.StartT);
+    engine.AddAirplane(tgtBaseId, pos, DefaultSpeed, azimuth, elevation, 0.0);
+    tgtBaseId++;
 }
 
 // ── 시뮬레이션 실행 ──
-engine.Start(config.SimEndTime);
+engine.Start(SimEndTime);
 
 // ── C2 이벤트 로그 종료 ──
-c2?.Dispose();
+c2.Dispose();
