@@ -99,7 +99,7 @@ public class TrackRadar : Model
     {
         if (ev is TrackOrderEvent order)
         {
-            if (order.Cmd == "start" && order.Target is not null)
+            if (order.Cmd == TrackOrderCmd.Start && order.Target is not null)
             {
                 _target = order.Target;
                 TrackPeriod = order.Period;
@@ -109,7 +109,7 @@ public class TrackRadar : Model
                     $"{t:F6} [{Name}] Tracking [{_target.Name}] period={TrackPeriod}s\n");
                 return TrackPeriod;
             }
-            else if (order.Cmd == "stop")
+            else if (order.Cmd == TrackOrderCmd.Stop)
             {
                 Logger.Dbg(DbgFlag.Init,
                     $"{t:F6} [{Name}] Track stop ordered\n");

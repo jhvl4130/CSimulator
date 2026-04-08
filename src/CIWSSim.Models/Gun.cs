@@ -99,8 +99,8 @@ public class Gun : Model
         }
 
         // DriveResult 피드백 (200Hz)
-        string fireStatus = !_firing ? "idle" : (onTarget ? "firing" : "slewing");
-        if (Ammo <= 0 && _firing) fireStatus = "ammo_out";
+        FireStatus fireStatus = !_firing ? FireStatus.Idle : (onTarget ? FireStatus.Firing : FireStatus.Slewing);
+        if (Ammo <= 0 && _firing) fireStatus = FireStatus.AmmoOut;
 
         double azVel = (_curAzimuth - _prevAzimuth) / DrivePeriod;
         double elVel = (_curElevation - _prevElevation) / DrivePeriod;
@@ -142,7 +142,7 @@ public class Gun : Model
                 return TContinue;
 
             case FireEvent fire:
-                _firing = (fire.Cmd == "on");
+                _firing = (fire.Cmd == FireCmd.On);
                 if (_firing)
                 {
                     _lastFireTime = t - FireInterval; // 즉시 발사 가능

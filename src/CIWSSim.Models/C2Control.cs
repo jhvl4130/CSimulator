@@ -108,7 +108,7 @@ public class C2Control : Model
         WriteLog(t, "Assign", Id, ev.TargetId, ciwsId,
             $"Target {ev.TargetId} assigned to CIWS {ciwsId}");
 
-        Engine!.SendEvent(fcs, new TargetDesignationEvent("start", ev.TargetId, target));
+        Engine!.SendEvent(fcs, new TargetDesignationEvent(DesignationCmd.Start, ev.TargetId, target));
 
         return TContinue;
     }
@@ -122,19 +122,19 @@ public class C2Control : Model
             ciwsId = (fcs is FCS f) ? f.CiwsId : fcs.Id;
 
         // 사격 시작/종료(성공/실패)만 로깅
-        if (ev.Status == "fire_start")
+        if (ev.Status == EngagementStatus.FireStart)
         {
             WriteLog(t, "FireStart", Id, ev.TargetId, ciwsId,
                 $"az={ev.Azimuth:F1} el={ev.Elevation:F1}");
         }
-        else if (ev.Status == "success")
+        else if (ev.Status == EngagementStatus.Success)
         {
             WriteLog(t, "Kill", Id, ev.TargetId, ciwsId,
                 $"fired={ev.BulletFire} remain={ev.BulletRemain}");
             _targetFcsMap.Remove(ev.TargetId);
             _latestTrackData.Remove(ev.TargetId);
         }
-        else if (ev.Status == "fail")
+        else if (ev.Status == EngagementStatus.Fail)
         {
             WriteLog(t, "Miss", Id, ev.TargetId, ciwsId,
                 $"fired={ev.BulletFire} remain={ev.BulletRemain}");

@@ -1,9 +1,16 @@
 namespace CIWSSimulator.Core.Events;
 
+public enum EngagementStatus
+{
+    Engaging,
+    FireStart,
+    Success,
+    Fail
+}
+
 /// <summary>
 /// FCS → C2: 교전 결과 보고.
 /// 교전 중 주기적으로 + 종료 시 전송.
-/// Status: "engaging", "success", "fail"
 /// </summary>
 public class EngagementResultEvent : SimEvent
 {
@@ -12,11 +19,11 @@ public class EngagementResultEvent : SimEvent
     public double Elevation { get; }
     public int BulletFire { get; }
     public int BulletRemain { get; }
-    public string Status { get; }
+    public EngagementStatus Status { get; }
 
     public EngagementResultEvent(int targetId,
         double azimuth, double elevation,
-        int bulletFire, int bulletRemain, string status)
+        int bulletFire, int bulletRemain, EngagementStatus status)
     {
         TargetId = targetId;
         Azimuth = azimuth;

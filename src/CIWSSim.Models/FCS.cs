@@ -72,7 +72,7 @@ public class FCS : Model
         if (Phase == PhaseType.FireOn || Phase == PhaseType.TrackRcvd
             || Phase == PhaseType.StartEngage)
         {
-            SendEngagementResult("engaging");
+            SendEngagementResult(EngagementStatus.Engaging);
             return EngagementReportPeriod;
         }
 
@@ -118,7 +118,7 @@ public class FCS : Model
 
     private double HandleTargetDesignation(double t, TargetDesignationEvent ev)
     {
-        if (ev.Cmd == "start")
+        if (ev.Cmd == DesignationCmd.Start)
         {
             if (Phase != PhaseType.Wait)
             {
@@ -137,16 +137,16 @@ public class FCS : Model
             if (TrackRadar is not null)
             {
                 Engine!.SendEvent(TrackRadar,
-                    new TrackOrderEvent(ev.TargetId, "start", TrackPeriod, _target));
+                    new TrackOrderEvent(ev.TargetId, TrackOrderCmd.Start, TrackPeriod, _target));
             }
 
             return EngagementReportPeriod;
         }
-        else if (ev.Cmd == "stop")
+        else if (ev.Cmd == DesignationCmd.Stop)
         {
             Logger.Dbg(DbgFlag.Init,
                 $"{t:F6} [{Name}] Designation stop for target {ev.TargetId}\n");
-            EndEngagement(t, "fail");
+            EndEngagement(t, EngagementStatus.Fail);
             return TInfinite;
         }
 
@@ -190,11 +190,11 @@ public class FCS : Model
                 if (GunModel is not null)
                 {
                     Engine!.SendEvent(GunModel, new DriveEvent(_aimAzimuth, _aimElevation));
-                    Engine!.SendEvent(GunModel, new FireEvent("on"));
+                    Engine!.SendEvent(GunModel, new FireEvent(FireCmd.On));
                 }
 
                 // C2에 사격 시작 보고
-                SendEngagementResult("fire_start");
+                SendEngagementResult(EngagementStatus.FireStart);
             }
         }
         else if (Phase == PhaseType.FireOn)
@@ -220,7 +220,7 @@ public class FCS : Model
         if (ev.BulletRemain <= 0 && Phase == PhaseType.FireOn)
         {
             Logger.Dbg(DbgFlag.Collide, $"{t:F6} [{Name}] Gun ammo depleted\n");
-            EndEngagement(t, "fail");
+            EndEngagement(t, EngagementStatus.Fail);
         }
 
         return TContinue;
@@ -246,7 +246,7 @@ public class FCS : Model
             $"{t:F6} [{Name}] Target {ev.TargetId} destroyed\n");
 
         DamageEval(t);
-        EndEngagement(t, "success");
+        EndEngagement(t, EngagementStatus.Success);
         return TInfinite;
     }
 
@@ -260,7 +260,7 @@ public class FCS : Model
         Phase = PhaseType.FireOff;
         Logger.Dbg(DbgFlag.Collide,
             $"{t:F6} [{Name}] Intercept FAILED for [{_target.Name}]\n");
-        EndEngagement(t, "fail");
+        EndEngagement(t, EngagementStatus.Fail);
         return TInfinite;
     }
 
@@ -275,7 +275,7 @@ public class FCS : Model
         Logger.Dbg(DbgFlag.Collide,
             $"{t:F6} [{Name}] Track lost for target {ev.TargetId}\n");
 
-        EndEngagement(t, "fail");
+        EndEngagement(t, EngagementStatus.Fail);
         return TInfinite;
     }
 
@@ -321,19 +321,19 @@ public class FCS : Model
 
     // ── 교전 종료 + 보고 ──
 
-    private void EndEngagement(double t, string status)
+    private void EndEngagement(double t, EngagementStatus status)
     {
         // Gun 사격 중지
         if (GunModel is not null && Phase != PhaseType.Wait)
         {
-            Engine!.SendEvent(GunModel, new FireEvent("off"));
+            Engine!.SendEvent(GunModel, new FireEvent(FireCmd.Off));
         }
 
         // TrackRadar 추적 중지
         if (TrackRadar is not null && _target is not null)
         {
             Engine!.SendEvent(TrackRadar,
-                new TrackOrderEvent(_target.Id, "stop", 0));
+                new TrackOrderEvent(_target.Id, TrackOrderCmd.Stop, 0));
         }
 
         // C2에 최종 교전 결과 보고
@@ -348,7 +348,7 @@ public class FCS : Model
         ReturnToWait();
     }
 
-    private void SendEngagementResult(string status)
+    private void SendEngagementResult(EngagementStatus status)
     {
         if (C2 is null || _target is null) return;
 
