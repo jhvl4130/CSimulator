@@ -172,7 +172,8 @@ public static class EngineExtensions
         {
             IniPos = enu,
             FireRange = fireRange,
-            CiwsId = ciwsId
+            CiwsId = ciwsId,
+            TrackPeriod = trackPeriod
         };
 
         var trackRadar = new TrackRadar(trackRadarId)

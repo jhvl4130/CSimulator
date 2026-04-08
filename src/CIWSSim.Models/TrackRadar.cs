@@ -89,7 +89,7 @@ public class TrackRadar : Model
         // FCS에 추적 데이터 전송
         if (Fcs is not null)
         {
-            Engine!.SendEvent(Fcs, new TrackDataEvent(_target.Id, pos, vel, acc));
+            Engine!.SendEvent(Fcs, new TrackInfoEvent(_target.Id, pos, vel, acc));
         }
 
         return TrackPeriod;
@@ -97,14 +97,25 @@ public class TrackRadar : Model
 
     public override double ExtTrans(double t, SimEvent ev)
     {
-        if (ev is TrackCmdEvent cmd)
+        if (ev is TrackOrderEvent order)
         {
-            _target = cmd.Target;
-            _hasPrev = false;
-            Phase = PhaseType.Run;
-            Logger.Dbg(DbgFlag.Init,
-                $"{t:F6} [{Name}] Tracking [{_target.Name}]\n");
-            return TrackPeriod;
+            if (order.Cmd == "start" && order.Target is not null)
+            {
+                _target = order.Target;
+                TrackPeriod = order.Period;
+                _hasPrev = false;
+                Phase = PhaseType.Run;
+                Logger.Dbg(DbgFlag.Init,
+                    $"{t:F6} [{Name}] Tracking [{_target.Name}] period={TrackPeriod}s\n");
+                return TrackPeriod;
+            }
+            else if (order.Cmd == "stop")
+            {
+                Logger.Dbg(DbgFlag.Init,
+                    $"{t:F6} [{Name}] Track stop ordered\n");
+                StopTracking();
+                return TInfinite;
+            }
         }
 
         return TContinue;

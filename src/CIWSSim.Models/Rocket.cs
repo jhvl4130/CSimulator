@@ -66,10 +66,26 @@ public class Rocket : Model
 
     public override double ExtTrans(double t, SimEvent ev)
     {
-        if (ev is CollideEvent)
+        switch (ev)
         {
-            Logger.Dbg(DbgFlag.Collide, $"{t:F6} [{Name}] destroyed by defense zone\n");
-            EndTarget();
+            case AttackEvent attack:
+                Health -= attack.Power;
+                Logger.Dbg(DbgFlag.Collide,
+                    $"{t:F6} [{Name}] Attacked, health={Health:F1}\n");
+                if (Health <= 0.0)
+                {
+                    if (attack.SourceFcs is not null)
+                    {
+                        Engine!.SendEvent(attack.SourceFcs, new DestroyedEvent(Id));
+                    }
+                    EndTarget();
+                }
+                break;
+
+            case CollideEvent:
+                Logger.Dbg(DbgFlag.Collide, $"{t:F6} [{Name}] destroyed by defense zone\n");
+                EndTarget();
+                break;
         }
         return TContinue;
     }

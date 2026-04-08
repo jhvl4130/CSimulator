@@ -8,7 +8,7 @@ namespace CIWSSimulator.Models;
 
 /// <summary>
 /// 함포 모델. FCS 명령에 따라 조준 방향으로 Bullet을 생성한다.
-/// 선회속도(slew rate) 제한과 탄약 제한을 가진다.
+/// Drive/Fire 분리, SlewRate 기반 구동 역학, 200Hz DriveResult 피드백.
 /// </summary>
 public class Gun : Model
 {
@@ -27,24 +27,36 @@ public class Gun : Model
     /// <summary>선회 속도 (도/초).</summary>
     public double SlewRate { get; set; } = 60.0;
 
+    /// <summary>탄종.</summary>
+    public string BulletType { get; set; } = "default";
+
     /// <summary>FCS 참조 (생성 시 주입).</summary>
     public Model? Fcs { get; set; }
 
-    /// <summary>현재 조준 방위각 (도).</summary>
-    private double _aimAzimuth;
-    private double _aimElevation;
+    // ── 구동 상태 ──
+    private double _cmdAzimuth;
+    private double _cmdElevation;
+    private double _curAzimuth;
+    private double _curElevation;
+    private double _prevAzimuth;
+    private double _prevElevation;
 
-    /// <summary>현재 교전 표적.</summary>
-    private Model? _target;
+    // ── 사격 상태 ──
+    private bool _firing;
+    private double _lastFireTime;
+    private int _totalFired;
 
     /// <summary>발사 간격 (초).</summary>
     private double FireInterval => 60.0 / Rpm;
 
+    /// <summary>구동 주기 (초). 200Hz.</summary>
+    private const double DrivePeriod = 0.005;
+
+    /// <summary>조준 허용 오차 (도).</summary>
+    private const double AimTolerance = 0.5;
+
     /// <summary>다음 탄환 ID.</summary>
     private int _nextBulletId;
-
-    /// <summary>발사 활성 여부.</summary>
-    private bool _firing;
 
     public Gun(int id) : base(id)
     {
@@ -53,7 +65,6 @@ public class Gun : Model
         Name = $"Gun-{id}";
     }
 
-    /// <summary>Bullet ID 시작 번호 설정.</summary>
     public void SetBulletIdStart(int startId)
     {
         _nextBulletId = startId;
@@ -65,64 +76,138 @@ public class Gun : Model
         Phase = PhaseType.WaitStart;
         IsEnabled = true;
         _firing = false;
+        _totalFired = 0;
         return TInfinite;
     }
 
     public override double IntTrans(double t)
     {
-        if (!_firing || Phase != PhaseType.Run || !IsEnabled)
+        if (Phase != PhaseType.Run || !IsEnabled)
             return TInfinite;
 
-        if (Ammo <= 0)
+        // SlewRate 기반 조준각 갱신
+        UpdateSlew(DrivePeriod);
+
+        // 조준 완료 + 사격 on + 탄약 있으면 발사 (RPM 간격 준수)
+        bool onTarget = IsOnTarget();
+        if (_firing && onTarget && Ammo > 0 && (t - _lastFireTime) >= FireInterval)
+        {
+            FireBullet(t);
+            Ammo--;
+            _totalFired++;
+            _lastFireTime = t;
+        }
+
+        // DriveResult 피드백 (200Hz)
+        string fireStatus = !_firing ? "idle" : (onTarget ? "firing" : "slewing");
+        if (Ammo <= 0 && _firing) fireStatus = "ammo_out";
+
+        double azVel = (_curAzimuth - _prevAzimuth) / DrivePeriod;
+        double elVel = (_curElevation - _prevElevation) / DrivePeriod;
+
+        if (Fcs is not null)
+        {
+            Engine!.SendEvent(Fcs, new DriveResultEvent(
+                _curAzimuth, _curElevation, azVel, elVel,
+                _totalFired, Ammo, fireStatus));
+        }
+
+        _prevAzimuth = _curAzimuth;
+        _prevElevation = _curElevation;
+
+        // 탄약 소진 시 사격 중단
+        if (Ammo <= 0 && _firing)
         {
             _firing = false;
             Logger.Dbg(DbgFlag.Collide, $"{t:F6} [{Name}] Ammo depleted\n");
-            if (Fcs is not null)
-                Engine!.SendEvent(Fcs, new StatusEvent("AmmoOut", $"{Name} ammo depleted"));
-            return TInfinite;
         }
 
-        // 표적이 이미 파괴된 경우 사격 중단
-        if (_target is not null && !_target.IsEnabled)
-        {
-            _firing = false;
-            return TInfinite;
-        }
-
-        // Bullet 생성: 현재 조준 방향으로 직선 궤적
-        FireBullet(t);
-        Ammo--;
-
-        return FireInterval;
+        return DrivePeriod;
     }
 
     public override double ExtTrans(double t, SimEvent ev)
     {
-        if (ev is FireCmdEvent cmd)
+        switch (ev)
         {
-            _aimAzimuth = cmd.AimAzimuth;
-            _aimElevation = cmd.AimElevation;
-            _target = cmd.Target;
-            _firing = true;
-            Phase = PhaseType.Run;
+            case DriveEvent drive:
+                _cmdAzimuth = drive.Azimuth;
+                _cmdElevation = drive.Elevation;
+                if (Phase == PhaseType.WaitStart)
+                {
+                    Phase = PhaseType.Run;
+                    _prevAzimuth = _curAzimuth;
+                    _prevElevation = _curElevation;
+                    return DrivePeriod;
+                }
+                return TContinue;
 
-            // Pose 업데이트
-            Pose = new Pose(_aimAzimuth, _aimElevation, 0.0);
-
-            Logger.Dbg(DbgFlag.Init,
-                $"{t:F6} [{Name}] Fire cmd: Az={_aimAzimuth:F2} El={_aimElevation:F2}\n");
-
-            return FireInterval;
+            case FireEvent fire:
+                _firing = (fire.Cmd == "on");
+                if (_firing)
+                {
+                    _lastFireTime = t - FireInterval; // 즉시 발사 가능
+                    if (Phase == PhaseType.WaitStart)
+                    {
+                        Phase = PhaseType.Run;
+                        return DrivePeriod;
+                    }
+                }
+                Logger.Dbg(DbgFlag.Init,
+                    $"{t:F6} [{Name}] Fire {fire.Cmd}\n");
+                return TContinue;
         }
 
         return TContinue;
     }
 
+    // ── Slew Dynamics ──
+
+    private void UpdateSlew(double dt)
+    {
+        double maxDelta = SlewRate * dt;
+
+        double azDiff = NormalizeAngle(_cmdAzimuth - _curAzimuth);
+        double elDiff = _cmdElevation - _curElevation;
+
+        _curAzimuth += Clamp(azDiff, -maxDelta, maxDelta);
+        _curElevation += Clamp(elDiff, -maxDelta, maxDelta);
+        _curAzimuth = NormalizeAngle360(_curAzimuth);
+
+        Pose = new Pose(_curAzimuth, _curElevation, 0.0);
+    }
+
+    private bool IsOnTarget()
+    {
+        double azDiff = Math.Abs(NormalizeAngle(_cmdAzimuth - _curAzimuth));
+        double elDiff = Math.Abs(_cmdElevation - _curElevation);
+        return azDiff <= AimTolerance && elDiff <= AimTolerance;
+    }
+
+    private static double NormalizeAngle(double angle)
+    {
+        while (angle > 180.0) angle -= 360.0;
+        while (angle < -180.0) angle += 360.0;
+        return angle;
+    }
+
+    private static double NormalizeAngle360(double angle)
+    {
+        while (angle >= 360.0) angle -= 360.0;
+        while (angle < 0.0) angle += 360.0;
+        return angle;
+    }
+
+    private static double Clamp(double val, double min, double max)
+    {
+        return val < min ? min : (val > max ? max : val);
+    }
+
+    // ── Bullet 생성 ──
+
     private void FireBullet(double t)
     {
-        // 직선 궤적 생성: Gun 위치에서 조준 방향으로 BulletSpeed로 비행
         int bulletId = _nextBulletId++;
-        double flightTime = 10.0; // 최대 비행 시간
+        double flightTime = 10.0;
         int numPoints = (int)(flightTime / MovePeriod) + 1;
 
         var trajectory = new List<BulletPoint>(numPoints);
@@ -130,11 +215,15 @@ public class Gun : Model
         {
             double dt = i * MovePeriod;
             double dist = BulletSpeed * dt;
-            var pos = GeoUtil.NextPosition(Pos, _aimAzimuth, _aimElevation, dist);
+            var pos = GeoUtil.NextPosition(Pos, _curAzimuth, _curElevation, dist);
             trajectory.Add(new BulletPoint(t + dt, pos));
         }
 
-        var bullet = new Bullet(bulletId) { BulletPower = BulletPower };
+        var bullet = new Bullet(bulletId)
+        {
+            BulletPower = BulletPower,
+            Fcs = Fcs
+        };
         bullet.SetTrajectory(trajectory);
         Engine!.AddRuntimeModel(bullet);
 

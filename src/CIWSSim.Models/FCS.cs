@@ -8,7 +8,7 @@ namespace CIWSSimulator.Models;
 
 /// <summary>
 /// 사격통제 시스템 (FCS). CIWS당 1개.
-/// TrackRadar에 추적 명령, EOTS에 종속 추적 명령, Gun에 사격 명령을 내리고
+/// TrackRadar에 추적 명령, Gun에 구동/사격 명령을 내리고
 /// 피해평가(PHP)를 수행한다.
 /// </summary>
 public class FCS : Model
@@ -18,6 +18,15 @@ public class FCS : Model
 
     /// <summary>소속 CIWS ID.</summary>
     public int CiwsId { get; set; }
+
+    /// <summary>PHP 오차 모델.</summary>
+    public double PhpErr { get; set; }
+
+    /// <summary>추적 주기 (TrackRadar에 전달).</summary>
+    public double TrackPeriod { get; set; } = 0.04;
+
+    /// <summary>교전 결과 보고 주기 (초).</summary>
+    public double EngagementReportPeriod { get; set; } = 1.0;
 
     // ── 참조 (생성 시 주입) ──
     public Model? TrackRadar { get; set; }
@@ -30,11 +39,17 @@ public class FCS : Model
     // ── 최신 추적 데이터 ──
     private XYZPos _trackPos;
     private XYZPos _trackVel;
+    private double _aimAzimuth;
+    private double _aimElevation;
+    private double _trackDist;
+
+    // ── Gun 피드백 (DriveResult) ──
+    private int _bulletFire;
+    private int _bulletRemain;
 
     // ── 교전 통계 (PHP 계산용) ──
     private int _firedCount;
     private int _hitCount;
-    private double _totalDamage;
 
     public FCS(int id) : base(id)
     {
@@ -53,6 +68,14 @@ public class FCS : Model
 
     public override double IntTrans(double t)
     {
+        // 교전 중 주기적 EngagementResult 보고
+        if (Phase == PhaseType.FireOn || Phase == PhaseType.TrackRcvd
+            || Phase == PhaseType.StartEngage)
+        {
+            SendEngagementResult("engaging");
+            return EngagementReportPeriod;
+        }
+
         return TInfinite;
     }
 
@@ -60,14 +83,20 @@ public class FCS : Model
     {
         switch (ev)
         {
-            case AssignEvent assign:
-                return HandleAssign(t, assign);
+            case TargetDesignationEvent desig:
+                return HandleTargetDesignation(t, desig);
 
-            case TrackDataEvent trackData:
-                return HandleTrackData(t, trackData);
+            case TrackInfoEvent trackInfo:
+                return HandleTrackInfo(t, trackInfo);
 
-            case HitResultEvent hitResult:
-                return HandleHitResult(t, hitResult);
+            case DriveResultEvent driveResult:
+                return HandleDriveResult(t, driveResult);
+
+            case BulletPositionEvent bulletPos:
+                return HandleBulletPosition(t, bulletPos);
+
+            case DestroyedEvent destroyed:
+                return HandleDestroyed(t, destroyed);
 
             case FailEvent fail:
                 return HandleFail(t, fail);
@@ -75,41 +104,58 @@ public class FCS : Model
             case TrackLostEvent trackLost:
                 return HandleTrackLost(t, trackLost);
 
-            case StatusEvent status:
-                return HandleStatus(t, status);
-
             case CollideEvent collide:
                 return HandleCollide(t, collide);
+
+            case HealthEvent health:
+                return TContinue;
         }
 
         return TContinue;
     }
 
-    private double HandleAssign(double t, AssignEvent ev)
+    // ── ⓘ TargetDesignation (C2 → FCS) ──
+
+    private double HandleTargetDesignation(double t, TargetDesignationEvent ev)
     {
-        if (Phase != PhaseType.Wait)
+        if (ev.Cmd == "start")
         {
-            Logger.Warn($"{t:F6} [{Name}] Assign rejected: busy (phase={Phase})\n");
-            return TContinue;
+            if (Phase != PhaseType.Wait)
+            {
+                Logger.Warn($"{t:F6} [{Name}] Designation rejected: busy (phase={Phase})\n");
+                return TContinue;
+            }
+
+            _target = ev.Target;
+            Phase = PhaseType.StartEngage;
+            ResetStats();
+
+            Logger.Dbg(DbgFlag.Init,
+                $"{t:F6} [{Name}] Designated target {ev.TargetId}\n");
+
+            // TrackRadar에 추적 명령
+            if (TrackRadar is not null)
+            {
+                Engine!.SendEvent(TrackRadar,
+                    new TrackOrderEvent(ev.TargetId, "start", TrackPeriod, _target));
+            }
+
+            return EngagementReportPeriod;
         }
-
-        _target = ev.Target;
-        Phase = PhaseType.StartEngage;
-        ResetStats();
-
-        Logger.Dbg(DbgFlag.Init,
-            $"{t:F6} [{Name}] Assigned [{_target.Name}]\n");
-
-        // TrackRadar에 추적 명령
-        if (TrackRadar is not null)
+        else if (ev.Cmd == "stop")
         {
-            Engine!.SendEvent(TrackRadar, new TrackCmdEvent(_target));
+            Logger.Dbg(DbgFlag.Init,
+                $"{t:F6} [{Name}] Designation stop for target {ev.TargetId}\n");
+            EndEngagement(t, "fail");
+            return TInfinite;
         }
 
         return TContinue;
     }
 
-    private double HandleTrackData(double t, TrackDataEvent ev)
+    // ── ⓘ TrackInfo (TrackRadar → FCS) ──
+
+    private double HandleTrackInfo(double t, TrackInfoEvent ev)
     {
         if (Phase != PhaseType.StartEngage && Phase != PhaseType.TrackRcvd
             && Phase != PhaseType.FireOn)
@@ -121,66 +167,87 @@ public class FCS : Model
         if (_target is null || !_target.IsEnabled)
             return TContinue;
 
-        // 방위각/고각 계산
-        double azimuth = GeoUtil.Bearing(Pos, _trackPos);
+        // 방위각/고각/거리 계산
+        _aimAzimuth = GeoUtil.Bearing(Pos, _trackPos);
         double dx = _trackPos.X - Pos.X;
         double dy = _trackPos.Y - Pos.Y;
         double dz = _trackPos.Z - Pos.Z;
         double dist2D = Math.Sqrt(dx * dx + dy * dy);
-        double elevation = GeoUtil.RadToDeg(Math.Atan2(dz, dist2D));
-        double dist = GeoUtil.Distance(Pos, _trackPos);
+        _aimElevation = GeoUtil.RadToDeg(Math.Atan2(dz, dist2D));
+        _trackDist = GeoUtil.Distance(Pos, _trackPos);
 
         if (Phase == PhaseType.StartEngage || Phase == PhaseType.TrackRcvd)
         {
             Phase = PhaseType.TrackRcvd;
 
-            if (dist <= FireRange)
+            if (_trackDist <= FireRange)
             {
                 Phase = PhaseType.FireOn;
                 Logger.Dbg(DbgFlag.Collide,
-                    $"{t:F6} [{Name}] FireOn [{_target.Name}] dist={dist:F1}m\n");
+                    $"{t:F6} [{Name}] FireOn [{_target.Name}] dist={_trackDist:F1}m\n");
 
-                // TODO: 프로토타입에서는 사격 비활성화
-                // if (GunModel is not null)
-                // {
-                //     Engine!.SendEvent(GunModel,
-                //         new FireCmdEvent(azimuth, elevation, _target));
-                // }
+                // Gun에 조준 + 사격 명령
+                if (GunModel is not null)
+                {
+                    Engine!.SendEvent(GunModel, new DriveEvent(_aimAzimuth, _aimElevation));
+                    Engine!.SendEvent(GunModel, new FireEvent("on"));
+                }
             }
         }
         else if (Phase == PhaseType.FireOn)
         {
-            // TODO: 프로토타입에서는 조준 갱신 비활성화
-            // if (GunModel is not null)
-            // {
-            //     Engine!.SendEvent(GunModel,
-            //         new FireCmdEvent(azimuth, elevation, _target));
-            // }
+            // 교전 중 조준 갱신
+            if (GunModel is not null)
+            {
+                Engine!.SendEvent(GunModel, new DriveEvent(_aimAzimuth, _aimElevation));
+            }
         }
 
         return TContinue;
     }
 
-    private double HandleHitResult(double t, HitResultEvent ev)
+    // ── ⓘ DriveResult (Gun → FCS, 200Hz) ──
+
+    private double HandleDriveResult(double t, DriveResultEvent ev)
     {
-        _firedCount++;
-        if (ev.IsHit)
-        {
-            _hitCount++;
-            _totalDamage += ev.Damage;
-        }
+        _bulletFire = ev.BulletFire;
+        _bulletRemain = ev.BulletRemain;
+        _firedCount = ev.BulletFire;
 
-        // 표적이 격파되었는지 확인
-        if (_target is not null && !_target.IsEnabled)
+        if (ev.BulletRemain <= 0 && Phase == PhaseType.FireOn)
         {
-            Phase = PhaseType.TgtDestroyed;
-            Logger.Dbg(DbgFlag.Collide,
-                $"{t:F6} [{Name}] Target [{_target.Name}] destroyed\n");
-            DoAssessment(t, true);
+            Logger.Dbg(DbgFlag.Collide, $"{t:F6} [{Name}] Gun ammo depleted\n");
+            EndEngagement(t, "fail");
         }
 
         return TContinue;
     }
+
+    // ── ⓘ BulletPosition (Bullet → FCS) ──
+
+    private double HandleBulletPosition(double t, BulletPositionEvent ev)
+    {
+        // 탄 위치 추적 (향후 DamageEval에 활용)
+        return TContinue;
+    }
+
+    // ── ⓘ Destroyed (Target → FCS) ──
+
+    private double HandleDestroyed(double t, DestroyedEvent ev)
+    {
+        if (_target is null || _target.Id != ev.TargetId)
+            return TContinue;
+
+        Phase = PhaseType.TgtDestroyed;
+        Logger.Dbg(DbgFlag.Collide,
+            $"{t:F6} [{Name}] Target {ev.TargetId} destroyed\n");
+
+        DamageEval(t);
+        EndEngagement(t, "success");
+        return TInfinite;
+    }
+
+    // ── ⓘ FailEvent (AssetZone → C2 → FCS) ──
 
     private double HandleFail(double t, FailEvent ev)
     {
@@ -190,9 +257,11 @@ public class FCS : Model
         Phase = PhaseType.FireOff;
         Logger.Dbg(DbgFlag.Collide,
             $"{t:F6} [{Name}] Intercept FAILED for [{_target.Name}]\n");
-        DoAssessment(t, false);
-        return TContinue;
+        EndEngagement(t, "fail");
+        return TInfinite;
     }
+
+    // ── ⓘ TrackLost (TrackRadar → FCS) ──
 
     private double HandleTrackLost(double t, TrackLostEvent ev)
     {
@@ -203,32 +272,11 @@ public class FCS : Model
         Logger.Dbg(DbgFlag.Collide,
             $"{t:F6} [{Name}] Track lost for target {ev.TargetId}\n");
 
-        // C2에 보고
-        if (C2 is not null)
-        {
-            Engine!.SendEvent(C2, new StatusEvent("TrackLost",
-                $"CIWS {CiwsId}: track lost for target {ev.TargetId}"));
-        }
-
-        ReturnToWait();
-        return TContinue;
+        EndEngagement(t, "fail");
+        return TInfinite;
     }
 
-    private double HandleStatus(double t, StatusEvent ev)
-    {
-        // Gun으로부터 탄약 소진 등 상태 보고
-        if (ev.EventType == "AmmoOut")
-        {
-            Phase = PhaseType.FireOff;
-            Logger.Dbg(DbgFlag.Collide, $"{t:F6} [{Name}] Gun ammo depleted\n");
-            if (_target is not null)
-            {
-                bool killed = !_target.IsEnabled;
-                DoAssessment(t, killed);
-            }
-        }
-        return TContinue;
-    }
+    // ── ⓘ CollideEvent (표적 → FCS 피격) ──
 
     private double HandleCollide(double t, CollideEvent ev)
     {
@@ -250,24 +298,60 @@ public class FCS : Model
         return TContinue;
     }
 
-    private void DoAssessment(double t, bool killed)
+    // ── 함수 ──
+
+    /// <summary>PHP 계산 (PhpErr 반영).</summary>
+    public double PHPCalc()
     {
-        // PHP 계산
-        double php = _firedCount > 0 ? (double)_hitCount / _firedCount : 0.0;
-        string result = killed ? "KILL" : "MISS";
+        if (_firedCount <= 0) return 0.0;
+        double rawPhp = (double)_hitCount / _firedCount;
+        return Math.Max(0.0, rawPhp + PhpErr);
+    }
 
-        string desc = $"CIWS {CiwsId}: target={_target?.Id}, result={result}, " +
-                       $"fired={_firedCount}, hit={_hitCount}, PHP={php:F4}, damage={_totalDamage:F1}";
+    /// <summary>피해 평가.</summary>
+    public void DamageEval(double t)
+    {
+        double php = PHPCalc();
+        Logger.Dbg(DbgFlag.Collide,
+            $"{t:F6} [{Name}] DamageEval: fired={_firedCount}, hit={_hitCount}, PHP={php:F4}\n");
+    }
 
-        Logger.Dbg(DbgFlag.Collide, $"{t:F6} [{Name}] Assessment: {desc}\n");
+    // ── 교전 종료 + 보고 ──
 
-        // C2에 보고
+    private void EndEngagement(double t, string status)
+    {
+        // Gun 사격 중지
+        if (GunModel is not null && Phase != PhaseType.Wait)
+        {
+            Engine!.SendEvent(GunModel, new FireEvent("off"));
+        }
+
+        // TrackRadar 추적 중지
+        if (TrackRadar is not null && _target is not null)
+        {
+            Engine!.SendEvent(TrackRadar,
+                new TrackOrderEvent(_target.Id, "stop", 0));
+        }
+
+        // C2에 최종 교전 결과 보고
+        SendEngagementResult(status);
+
+        // Health 보고
         if (C2 is not null)
         {
-            Engine!.SendEvent(C2, new StatusEvent("Assessment", desc));
+            Engine!.SendEvent(C2, new HealthEvent(Id, Health));
         }
 
         ReturnToWait();
+    }
+
+    private void SendEngagementResult(string status)
+    {
+        if (C2 is null || _target is null) return;
+
+        Engine!.SendEvent(C2, new EngagementResultEvent(
+            _target.Id, _aimAzimuth, _aimElevation,
+            _bulletFire, _bulletRemain, status));
     }
 
     private void ReturnToWait()
@@ -281,6 +365,7 @@ public class FCS : Model
     {
         _firedCount = 0;
         _hitCount = 0;
-        _totalDamage = 0.0;
+        _bulletFire = 0;
+        _bulletRemain = 0;
     }
 }

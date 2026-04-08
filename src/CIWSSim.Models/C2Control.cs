@@ -1,6 +1,7 @@
 using System.Text;
 using CIWSSimulator.Core;
 using CIWSSimulator.Core.Events;
+using CIWSSimulator.Core.Geometry;
 using CIWSSimulator.Core.Util;
 using static CIWSSimulator.Core.SimConstants;
 
@@ -17,6 +18,9 @@ public class C2Control : Model
 
     /// <summary>표적 ID → 할당된 FCS 매핑.</summary>
     private readonly Dictionary<int, Model> _targetFcsMap = new();
+
+    /// <summary>최신 추적 데이터 (표적 ID → TrackInfo).</summary>
+    private readonly Dictionary<int, TrackInfoEvent> _latestTrackData = new();
 
     /// <summary>이벤트 로그 StreamWriter.</summary>
     private StreamWriter? _logWriter;
@@ -56,12 +60,14 @@ public class C2Control : Model
     {
         switch (ev)
         {
-            case DetectEvent detect:
-                return HandleDetect(t, detect);
+            case TrackInfoEvent trackInfo:
+                return HandleTrackInfo(t, trackInfo);
 
-            case StatusEvent status:
-                HandleStatusReport(t, status);
-                return TContinue;
+            case EngagementResultEvent engResult:
+                return HandleEngagementResult(t, engResult);
+
+            case HealthEvent health:
+                return HandleHealth(t, health);
 
             case FailEvent fail:
                 return HandleFail(t, fail);
@@ -70,46 +76,75 @@ public class C2Control : Model
         return TContinue;
     }
 
-    private double HandleDetect(double t, DetectEvent ev)
-    {
-        var target = ev.Target;
+    // ── ⓘ TrackInfo (SearchRadar → C2, 주기적) ──
 
-        // 이미 할당된 표적이면 무시
-        if (_targetFcsMap.ContainsKey(target.Id))
+    private double HandleTrackInfo(double t, TrackInfoEvent ev)
+    {
+        // 최신 추적 데이터 갱신
+        _latestTrackData[ev.TargetId] = ev;
+
+        // 이미 할당된 표적이면 추적 데이터만 갱신
+        if (_targetFcsMap.ContainsKey(ev.TargetId))
             return TContinue;
 
-        // 위협순위 계산 (추후 구현) — 현재는 첫 번째 가용 FCS에 할당
-        Model? assignedFcs = null;
-        foreach (var fcs in FcsList)
-        {
-            if (fcs is FCS fcsModel && fcsModel.Phase == PhaseType.Wait)
-            {
-                assignedFcs = fcs;
-                break;
-            }
-        }
+        // 위협평가 + 할당
+        var target = Engine!.GetModel(ev.TargetId);
+        if (target is null || !target.IsEnabled)
+            return TContinue;
 
-        if (assignedFcs is null)
+        var fcs = TargetAlloc(t, ev.TargetId, target);
+        if (fcs is null)
         {
-            Logger.Warn($"{t:F6} [{Name}] No available FCS for [{target.Name}]\n");
-            WriteLog(t, "DetectNoFCS", Id, target.Id, 0,
-                $"No available FCS for target {target.Id}");
+            Logger.Warn($"{t:F6} [{Name}] No available FCS for target {ev.TargetId}\n");
+            WriteLog(t, "DetectNoFCS", Id, ev.TargetId, 0,
+                $"No available FCS for target {ev.TargetId}");
             return TContinue;
         }
 
         // 할당
-        _targetFcsMap[target.Id] = assignedFcs;
-        int ciwsId = (assignedFcs is FCS f) ? f.CiwsId : assignedFcs.Id;
+        _targetFcsMap[ev.TargetId] = fcs;
+        int ciwsId = (fcs is FCS f) ? f.CiwsId : fcs.Id;
 
         Logger.Dbg(DbgFlag.Init,
-            $"{t:F6} [{Name}] Assign [{target.Name}] → CIWS {ciwsId}\n");
-        WriteLog(t, "Assign", Id, target.Id, ciwsId,
-            $"Target {target.Id} assigned to CIWS {ciwsId}");
+            $"{t:F6} [{Name}] Assign target {ev.TargetId} → CIWS {ciwsId}\n");
+        WriteLog(t, "Assign", Id, ev.TargetId, ciwsId,
+            $"Target {ev.TargetId} assigned to CIWS {ciwsId}");
 
-        Engine!.SendEvent(assignedFcs, new AssignEvent(target));
+        Engine!.SendEvent(fcs, new TargetDesignationEvent("start", ev.TargetId, target));
 
         return TContinue;
     }
+
+    // ── ⓘ EngagementResult (FCS → C2, 주기적 + 종료) ──
+
+    private double HandleEngagementResult(double t, EngagementResultEvent ev)
+    {
+        int ciwsId = 0;
+        if (_targetFcsMap.TryGetValue(ev.TargetId, out var fcs))
+            ciwsId = (fcs is FCS f) ? f.CiwsId : fcs.Id;
+
+        WriteLog(t, $"Engagement_{ev.Status}", Id, ev.TargetId, ciwsId,
+            $"az={ev.Azimuth:F1} el={ev.Elevation:F1} fired={ev.BulletFire} remain={ev.BulletRemain}");
+
+        // 교전 종료 시 매핑 정리
+        if (ev.Status == "success" || ev.Status == "fail")
+        {
+            _targetFcsMap.Remove(ev.TargetId);
+            _latestTrackData.Remove(ev.TargetId);
+        }
+
+        return TContinue;
+    }
+
+    // ── ⓘ Health ──
+
+    private double HandleHealth(double t, HealthEvent ev)
+    {
+        WriteLog(t, "Health", ev.Id, 0, 0, $"health={ev.Health:F1}");
+        return TContinue;
+    }
+
+    // ── ⓘ FailEvent (AssetZone → C2) ──
 
     private double HandleFail(double t, FailEvent ev)
     {
@@ -128,26 +163,40 @@ public class C2Control : Model
         return TContinue;
     }
 
-    private void HandleStatusReport(double t, StatusEvent ev)
-    {
-        WriteLog(t, ev.EventType, Id, 0, 0, ev.Description);
+    // ── ⓕ 위협평가 ──
 
-        // Assessment 완료 시 표적-FCS 매핑 정리
-        if (ev.EventType == "Assessment" || ev.EventType == "TrackLost")
+    /// <summary>위협 우선순위 평가 (거리 기반: 가까운 것 우선).</summary>
+    public List<int> ThreatEval()
+    {
+        var threats = new List<(int id, double dist)>();
+
+        foreach (var (id, info) in _latestTrackData)
         {
-            // 완료된 FCS의 표적 매핑 제거
-            var toRemove = new List<int>();
-            foreach (var (targetId, fcs) in _targetFcsMap)
-            {
-                if (fcs is FCS fcsModel && fcsModel.Phase == PhaseType.Wait)
-                {
-                    toRemove.Add(targetId);
-                }
-            }
-            foreach (var id in toRemove)
-                _targetFcsMap.Remove(id);
+            if (_targetFcsMap.ContainsKey(id)) continue;
+            double dist = GeoUtil.Distance(Pos, info.Pos);
+            threats.Add((id, dist));
         }
+
+        threats.Sort((a, b) => a.dist.CompareTo(b.dist));
+        return threats.Select(t => t.id).ToList();
     }
+
+    // ── ⓕ 표적 할당 ──
+
+    /// <summary>ThreatEval 기반 표적 할당. 가용 FCS 반환.</summary>
+    public Model? TargetAlloc(double t, int targetId, Model target)
+    {
+        foreach (var fcs in FcsList)
+        {
+            if (fcs is FCS fcsModel && fcsModel.Phase == PhaseType.Wait)
+            {
+                return fcs;
+            }
+        }
+        return null;
+    }
+
+    // ── 로그 ──
 
     private void WriteLog(double t, string eventType, int sourceId, int targetId,
         int ciwsId, string detail)
@@ -157,7 +206,7 @@ public class C2Control : Model
         _logWriter?.Flush();
     }
 
-    /// <summary>시뮬레이션 종료 시 StreamWriter 정리. Engine.Start() 이후 호출.</summary>
+    /// <summary>시뮬레이션 종료 시 StreamWriter 정리.</summary>
     public void Dispose()
     {
         _logWriter?.Dispose();
