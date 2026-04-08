@@ -96,8 +96,6 @@ public class C2Control : Model
         if (fcs is null)
         {
             Logger.Warn($"{t:F6} [{Name}] No available FCS for target {ev.TargetId}\n");
-            WriteLog(t, "DetectNoFCS", Id, ev.TargetId, 0,
-                $"No available FCS for target {ev.TargetId}");
             return TContinue;
         }
 
@@ -123,12 +121,23 @@ public class C2Control : Model
         if (_targetFcsMap.TryGetValue(ev.TargetId, out var fcs))
             ciwsId = (fcs is FCS f) ? f.CiwsId : fcs.Id;
 
-        WriteLog(t, $"Engagement_{ev.Status}", Id, ev.TargetId, ciwsId,
-            $"az={ev.Azimuth:F1} el={ev.Elevation:F1} fired={ev.BulletFire} remain={ev.BulletRemain}");
-
-        // 교전 종료 시 매핑 정리
-        if (ev.Status == "success" || ev.Status == "fail")
+        // 사격 시작/종료(성공/실패)만 로깅
+        if (ev.Status == "fire_start")
         {
+            WriteLog(t, "FireStart", Id, ev.TargetId, ciwsId,
+                $"az={ev.Azimuth:F1} el={ev.Elevation:F1}");
+        }
+        else if (ev.Status == "success")
+        {
+            WriteLog(t, "Kill", Id, ev.TargetId, ciwsId,
+                $"fired={ev.BulletFire} remain={ev.BulletRemain}");
+            _targetFcsMap.Remove(ev.TargetId);
+            _latestTrackData.Remove(ev.TargetId);
+        }
+        else if (ev.Status == "fail")
+        {
+            WriteLog(t, "Miss", Id, ev.TargetId, ciwsId,
+                $"fired={ev.BulletFire} remain={ev.BulletRemain}");
             _targetFcsMap.Remove(ev.TargetId);
             _latestTrackData.Remove(ev.TargetId);
         }
@@ -140,7 +149,6 @@ public class C2Control : Model
 
     private double HandleHealth(double t, HealthEvent ev)
     {
-        WriteLog(t, "Health", ev.Id, 0, 0, $"health={ev.Health:F1}");
         return TContinue;
     }
 

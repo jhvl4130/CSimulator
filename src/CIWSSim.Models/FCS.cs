@@ -192,6 +192,9 @@ public class FCS : Model
                     Engine!.SendEvent(GunModel, new DriveEvent(_aimAzimuth, _aimElevation));
                     Engine!.SendEvent(GunModel, new FireEvent("on"));
                 }
+
+                // C2에 사격 시작 보고
+                SendEngagementResult("fire_start");
             }
         }
         else if (Phase == PhaseType.FireOn)
