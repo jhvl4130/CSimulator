@@ -6,7 +6,14 @@ public class InputConfig
 {
     public int Version { get; set; }
     public string GroupKey { get; set; } = "";
+    public WorldMapLLH? WorldMapLLH { get; set; }
     public List<RecordGroup> Records { get; set; } = new();
+}
+
+public class WorldMapLLH
+{
+    public double Latitude { get; set; }
+    public double Longitude { get; set; }
 }
 
 public class RecordGroup

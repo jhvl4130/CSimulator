@@ -25,9 +25,13 @@ var targetItems = input.Records
 var areaRecord = input.Records
     .FirstOrDefault(r => r.Tag == "Area");
 
-// ── Origin 결정: Area가 있으면 사용, 없으면 CIWS 중심점 ──
+// ── Origin 결정: worldMapLLH → Area tag → CIWS 중심점 ──
 LLHPos origin;
-if (areaRecord is not null && areaRecord.Items.Count > 0)
+if (input.WorldMapLLH is not null)
+{
+    origin = new LLHPos(input.WorldMapLLH.Latitude, input.WorldMapLLH.Longitude, 0.0);
+}
+else if (areaRecord is not null && areaRecord.Items.Count > 0)
 {
     var a = areaRecord.Items[0].Position;
     origin = new LLHPos(a.Latitude, a.Longitude, a.Height);
@@ -86,12 +90,28 @@ foreach (var ciws in ciwsItems)
     ciwsBaseId += 10;
 }
 
-// ── SearchRadar 등록 (원점 위치) ──
-var sr = engine.AddSearchRadar(100, origin, DetectRange, DetectPeriod);
+// ── SearchRadar/AssetZone 위치: CIWS 중심점 ──
+LLHPos siteCenter;
+if (ciwsItems.Count > 0)
+{
+    double latSum = 0, lonSum = 0, altSum = 0;
+    foreach (var c in ciwsItems)
+    {
+        latSum += c.Position.Latitude;
+        lonSum += c.Position.Longitude;
+        altSum += c.Position.Height;
+    }
+    siteCenter = new LLHPos(latSum / ciwsItems.Count, lonSum / ciwsItems.Count, altSum / ciwsItems.Count);
+}
+else
+{
+    siteCenter = origin;
+}
+
+var sr = engine.AddSearchRadar(100, siteCenter, DetectRange, DetectPeriod);
 sr.C2 = c2;
 
-// ── AssetZone 등록 (원점 기준, 반경 2000m) ──
-engine.AddAssetZone(900, origin, AssetRadius, c2);
+engine.AddAssetZone(900, siteCenter, AssetRadius, c2);
 
 // ── Airplane 등록 (input의 Target 데이터 사용) ──
 int tgtBaseId = 1;

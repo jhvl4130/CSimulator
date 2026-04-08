@@ -1,6 +1,11 @@
 {
   "version": 1,
   "groupKey": "DefaultGroup",
+  "worldMapLLH":
+  {
+    "latitude": 37.5863939999,
+    "longitude": 126.9749439999
+  },
   "records": [
     {
       "tag": "CombatPlatform.Ciws",
