@@ -39,6 +39,102 @@ public static class EngineExtensions
             sizeX, sizeY, sizeZ);
     }
 
+    // ── Missile ──
+
+    public static void AddMissile(this Engine engine, int id,
+        double x, double y, double z, double speed,
+        double azimuth, double elevation, double startT,
+        double sizeX = 0.0, double sizeY = 0.0, double sizeZ = 0.0)
+    {
+        var model = new Missile(id)
+        {
+            Tag = "CombatPlatform.Target.Missile",
+            IniPos = new XYZPos(x, y, z),
+            IniSpeed = speed,
+            IniAzimuth = azimuth,
+            IniElevation = elevation,
+            StartT = startT,
+            HalfX = sizeX / 2.0,
+            HalfY = sizeY / 2.0,
+            HalfZ = sizeZ / 2.0
+        };
+        engine.RegisterModel(model);
+    }
+
+    public static void AddMissile(this Engine engine, int id,
+        LLHPos llh, double speed,
+        double azimuth, double elevation, double startT,
+        double sizeX = 0.0, double sizeY = 0.0, double sizeZ = 0.0)
+    {
+        var enu = GeoUtil.LlaToEnu(llh, engine.Origin);
+        engine.AddMissile(id, enu.X, enu.Y, enu.Z, speed, azimuth, elevation, startT,
+            sizeX, sizeY, sizeZ);
+    }
+
+    // ── Uav ──
+
+    public static void AddUav(this Engine engine, int id,
+        double x, double y, double z, double speed,
+        double azimuth, double elevation, double startT,
+        double sizeX = 0.0, double sizeY = 0.0, double sizeZ = 0.0)
+    {
+        var model = new Uav(id)
+        {
+            Tag = "CombatPlatform.Target.Uav",
+            IniPos = new XYZPos(x, y, z),
+            IniSpeed = speed,
+            IniAzimuth = azimuth,
+            IniElevation = elevation,
+            StartT = startT,
+            HalfX = sizeX / 2.0,
+            HalfY = sizeY / 2.0,
+            HalfZ = sizeZ / 2.0
+        };
+        engine.RegisterModel(model);
+    }
+
+    public static void AddUav(this Engine engine, int id,
+        LLHPos llh, double speed,
+        double azimuth, double elevation, double startT,
+        double sizeX = 0.0, double sizeY = 0.0, double sizeZ = 0.0)
+    {
+        var enu = GeoUtil.LlaToEnu(llh, engine.Origin);
+        engine.AddUav(id, enu.X, enu.Y, enu.Z, speed, azimuth, elevation, startT,
+            sizeX, sizeY, sizeZ);
+    }
+
+    // ── Drone ──
+
+    public static void AddDrone(this Engine engine, int id,
+        double x, double y, double z, double speed,
+        double azimuth, double elevation, double startT,
+        double sizeX = 0.0, double sizeY = 0.0, double sizeZ = 0.0)
+    {
+        var model = new Drone(id)
+        {
+            Tag = "CombatPlatform.Target.Drone",
+            IniPos = new XYZPos(x, y, z),
+            IniSpeed = speed,
+            IniAzimuth = azimuth,
+            IniElevation = elevation,
+            StartT = startT,
+            HalfX = sizeX / 2.0,
+            HalfY = sizeY / 2.0,
+            HalfZ = sizeZ / 2.0
+        };
+        engine.RegisterModel(model);
+    }
+
+    public static void AddDrone(this Engine engine, int id,
+        LLHPos llh, double speed,
+        double azimuth, double elevation, double startT,
+        double sizeX = 0.0, double sizeY = 0.0, double sizeZ = 0.0)
+    {
+        var enu = GeoUtil.LlaToEnu(llh, engine.Origin);
+        engine.AddDrone(id, enu.X, enu.Y, enu.Z, speed, azimuth, elevation, startT,
+            sizeX, sizeY, sizeZ);
+    }
+
     // ── Waypoint ──
 
     /// <summary>LLH 좌표로 웨이포인트 추가.</summary>

@@ -6,31 +6,35 @@ using static CIWSSimulator.Core.SimConstants;
 
 namespace CIWSSimulator.Models;
 
-public class Rocket : TargetBase
+public class Drone : TargetBase
 {
-    public Rocket(int id, XYZPos lp, double speed, double azi, double ele) : base(id)
+    private readonly WaypointMover _mover = new();
+
+    public Drone(int id) : base(id)
     {
-        Type = MtRocket;
-        Name = $"Rocket-{id}";
-
-        IniPos = lp;
-        IniSpeed = speed;
-        IniAzimuth = azi;
-        IniElevation = ele;
-
+        Type = MtDrone;
+        Name = $"Drone-{id}";
         Power = 50.0;
     }
+
+    public WaypointMover Mover => _mover;
 
     public override double Init(double t)
     {
         InitRuntimeVars();
+        _mover.Reset();
+
+        if (StartT > 0.0)
+        {
+            Phase = PhaseType.WaitStart;
+            IsEnabled = false;
+            Speed = 0.0;
+            return StartT;
+        }
 
         Phase = PhaseType.Run;
         IsEnabled = true;
         Speed = IniSpeed;
-
-        Logger.Dbg(DbgFlag.Init, $"{t:F6} [{Name}] created\n");
-
         return MovePeriod;
     }
 
@@ -40,14 +44,34 @@ public class Rocket : TargetBase
 
         switch (Phase)
         {
-            case PhaseType.Run:
+            case PhaseType.WaitStart:
+                Phase = PhaseType.Run;
+                IsEnabled = true;
+                Speed = IniSpeed;
                 tN = MovePeriod;
+                break;
+
+            case PhaseType.Run:
+            {
+                tN = MovePeriod;
+
+                bool reached = _mover.Step(this, MovePeriod);
+                IsDirty = true;
+
+                if (reached && _mover.IsFinished(this))
+                {
+                    EndTarget();
+                    tN = TInfinite;
+                    break;
+                }
 
                 if (CheckBuildingCollision(t) || CheckAssetZoneCollision(t))
                 {
                     tN = TInfinite;
+                    break;
                 }
                 break;
+            }
         }
 
         return tN;

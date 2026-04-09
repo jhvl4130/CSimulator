@@ -6,13 +6,12 @@ using static CIWSSimulator.Core.SimConstants;
 
 namespace CIWSSimulator.Models;
 
-public class Airplane : Model
+public class Airplane : TargetBase
 {
     private readonly WaypointMover _mover = new();
 
     public Airplane(int id) : base(id)
     {
-        Class = ModelClass.Target;
         Type = MtAirplane;
         Name = $"Airplane-{id}";
         Power = 50.0;
@@ -64,6 +63,7 @@ public class Airplane : Model
                 tN = MovePeriod;
 
                 bool reached = _mover.Step(this, MovePeriod);
+                IsDirty = true;
 
                 if (reached && _mover.IsFinished(this))
                 {
@@ -73,21 +73,11 @@ public class Airplane : Model
                     break;
                 }
 
-                // 충돌 판정
-                foreach (var target in Engine!.GetModelsByClass(ModelClass.Asset))
+                if (CheckBuildingCollision(t) || CheckAssetZoneCollision(t))
                 {
-                    if (!target.IsEnabled) continue;
-                    if (CollisionDetection.IsCollide(Pos, target.Building))
-                    {
-                        Logger.Dbg(DbgFlag.Collide,
-                            $"{t:F6} [{Name}] ↔ [{target.Name}] Collide\n");
-                        Engine.SendEvent(target, new CollideEvent(Power));
-                        EndTarget();
-                        tN = TInfinite;
-                        break;
-                    }
+                    tN = TInfinite;
+                    break;
                 }
-                if (!IsEnabled) break;
 
                 Logger.Dbg(DbgFlag.Move,
                     $"{t:F6} [{Name}] x={Pos.X:F2} y={Pos.Y:F2} z={Pos.Z:F2} " +
@@ -104,32 +94,13 @@ public class Airplane : Model
         switch (ev)
         {
             case AttackEvent attack:
-                Health -= attack.Power;
-                Logger.Dbg(DbgFlag.Collide,
-                    $"{t:F6} [{Name}] Attacked, health={Health:F1}\n");
-                if (Health <= 0.0)
-                {
-                    // FCS에 파괴 통보
-                    if (attack.SourceFcs is not null)
-                    {
-                        Engine!.SendEvent(attack.SourceFcs, new DestroyedEvent(Id));
-                    }
-                    EndTarget();
-                }
+                HandleAttack(t, attack);
                 break;
 
             case CollideEvent:
-                Logger.Dbg(DbgFlag.Collide, $"{t:F6} [{Name}] destroyed by defense zone\n");
-                EndTarget();
+                HandleCollide(t);
                 break;
         }
         return TContinue;
-    }
-
-    private void EndTarget()
-    {
-        Phase = PhaseType.End;
-        IsEnabled = false;
-        Engine?.RemoveModel(Id);
     }
 }

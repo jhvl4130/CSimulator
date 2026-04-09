@@ -16,7 +16,7 @@ public class AssetZone : Model
     public double Radius { get; set; }
 
     /// <summary>방어존에 진입한 표적 수.</summary>
-    public int HitCount { get; private set; }
+    public int HitCount { get; internal set; }
 
     /// <summary>C2Control 참조 (생성 시 주입).</summary>
     public Model? C2 { get; set; }
@@ -33,35 +33,12 @@ public class AssetZone : Model
         InitRuntimeVars();
         Phase = PhaseType.Run;
         IsEnabled = true;
-        return MovePeriod;
+        return TInfinite;
     }
 
     public override double IntTrans(double t)
     {
-        if (Phase != PhaseType.Run || !IsEnabled)
-            return TInfinite;
-
-        foreach (var target in Engine!.GetModelsByClass(ModelClass.Target))
-        {
-            if (!target.IsEnabled) continue;
-            if (CollisionDetection.IsInsideHemisphere(target.Pos, Pos, Radius))
-            {
-                Logger.Dbg(DbgFlag.Collide,
-                    $"{t:F6} [{Name}] ↔ [{target.Name}] Intercept FAILED (reached zone)\n");
-
-                // C2Control에 요격 실패 보고
-                if (C2 is not null)
-                {
-                    Engine.SendEvent(C2, new FailEvent(target));
-                }
-
-                // 표적 파괴 (방어존 도달 = 피해 발생)
-                HitCount++;
-                Engine.SendEvent(target, new CollideEvent(target.Power));
-            }
-        }
-
-        return MovePeriod;
+        return TInfinite;
     }
 
     public override double ExtTrans(double t, SimEvent ev)
