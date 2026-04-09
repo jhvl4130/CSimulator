@@ -12,7 +12,7 @@ namespace CIWSSimulator.Models;
 /// </summary>
 public class Bullet : Model
 {
-    private List<BulletPoint> _trajectory = new();
+    private List<BallisticState> _trajectory = new();
     private int _cursor;
     private XYZPos _prevPos;
     private bool _hasPrev;
@@ -38,9 +38,9 @@ public class Bullet : Model
         Name = $"Bullet-{id}";
     }
 
-    public void SetTrajectory(IEnumerable<BulletPoint> points)
+    public void SetTrajectory(IEnumerable<BallisticState> points)
     {
-        _trajectory = new List<BulletPoint>(points);
+        _trajectory = new List<BallisticState>(points);
     }
 
     private XYZPos Interpolate(double t)

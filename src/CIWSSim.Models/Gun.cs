@@ -210,13 +210,13 @@ public class Gun : Model
         double flightTime = 10.0;
         int numPoints = (int)(flightTime / MovePeriod) + 1;
 
-        var trajectory = new List<BulletPoint>(numPoints);
+        var trajectory = new List<BallisticState>(numPoints);
         for (int i = 0; i < numPoints; i++)
         {
             double dt = i * MovePeriod;
             double dist = BulletSpeed * dt;
             var pos = GeoUtil.NextPosition(Pos, _curAzimuth, _curElevation, dist);
-            trajectory.Add(new BulletPoint(t + dt, pos));
+            trajectory.Add(new BallisticState(t + dt, pos));
         }
 
         var bullet = new Bullet(bulletId)
