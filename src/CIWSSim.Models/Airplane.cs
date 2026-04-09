@@ -63,7 +63,7 @@ public class Airplane : TargetBase
                 tN = MovePeriod;
 
                 bool reached = _mover.Step(this, MovePeriod);
-                IsDirty = true;
+                IsStateChanged = true;
 
                 if (reached && _mover.IsFinished(this))
                 {

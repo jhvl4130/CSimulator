@@ -39,7 +39,7 @@ public abstract class Model
     public XYZPos Pos { get; set; }
     public Pose Pose { get; set; }
     public double Speed { get; set; }
-    public bool IsDirty { get; set; } = true;
+    public bool IsStateChanged { get; set; } = true;
 
     // 상태
     public bool IsEnabled { get; set; } = true;

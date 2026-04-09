@@ -75,7 +75,7 @@ public class Gun : Model
         InitRuntimeVars();
         Phase = PhaseType.WaitStart;
         IsEnabled = true;
-        IsDirty = false;
+        IsStateChanged = false;
         _firing = false;
         _totalFired = 0;
         return TInfinite;
@@ -116,7 +116,7 @@ public class Gun : Model
         if (_curAzimuth != _prevAzimuth || _curElevation != _prevElevation)
         {
             Pose = new Pose(_curAzimuth, _curElevation, 0.0);
-            IsDirty = true;
+            IsStateChanged = true;
         }
         _prevAzimuth = _curAzimuth;
         _prevElevation = _curElevation;
