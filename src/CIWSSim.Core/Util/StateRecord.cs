@@ -8,23 +8,23 @@ namespace CIWSSimulator.Core.Util;
 public readonly struct StateRecord
 {
     public double Time { get; }
+    public string Tag { get; }
     public int Id { get; }
-    public int Type { get; }
     public XYZPos Pos { get; }
     public Pose Pose { get; }
 
-    public StateRecord(double time, int id, int type, XYZPos pos, Pose pose)
+    public StateRecord(double time, string tag, int id, XYZPos pos, Pose pose)
     {
         Time = time;
+        Tag = tag;
         Id = id;
-        Type = type;
         Pos = pos;
         Pose = pose;
     }
 
     /// <summary>CSV 헤더.</summary>
     public static readonly string[] CsvHeader =
-        { "Time", "ID", "Type", "Lat", "Lon", "Alt", "Roll", "Pitch", "Yaw" };
+        { "Time", "Tag", "ID", "Lat", "Lon", "Alt", "Roll", "Pitch", "Yaw" };
 
     /// <summary>ENU→LLH 변환 후 CSV 행으로 변환.</summary>
     public string[] ToCsvRow(LLHPos origin)
@@ -33,8 +33,8 @@ public readonly struct StateRecord
         return new[]
         {
             Time.ToString("F4"),
+            Tag,
             Id.ToString(),
-            Type.ToString(),
             llh.Lat.ToString("F8"),
             llh.Lon.ToString("F8"),
             llh.Hgt.ToString("F4"),

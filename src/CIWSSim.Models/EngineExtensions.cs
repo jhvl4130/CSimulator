@@ -15,6 +15,7 @@ public static class EngineExtensions
     {
         var model = new Airplane(id)
         {
+            Tag = "CombatPlatform.Target.Aircraft",
             IniPos = new XYZPos(x, y, z),
             IniSpeed = speed,
             IniAzimuth = azimuth,
@@ -103,7 +104,7 @@ public static class EngineExtensions
     public static void AddBullet(this Engine engine, int id,
         List<BulletPoint> trajectory, double power = 10.0)
     {
-        var model = new Bullet(id) { BulletPower = power };
+        var model = new Bullet(id) { BulletPower = power, Tag = "CombatPlatform.Bullet" };
         model.SetTrajectory(trajectory);
         engine.AddRuntimeModel(model);
     }
@@ -184,6 +185,7 @@ public static class EngineExtensions
 
         var gun = new Gun(gunId)
         {
+            Tag = "CombatPlatform.Ciws",
             IniPos = enu,
             Rpm = rpm,
             BulletSpeed = bulletSpeed,

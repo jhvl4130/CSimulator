@@ -92,7 +92,7 @@ public class Gun : Model
         bool onTarget = IsOnTarget();
         if (_firing && onTarget && Ammo > 0 && (t - _lastFireTime) >= FireInterval)
         {
-            FireBullet(t);
+            // FireBullet(t);
             Ammo--;
             _totalFired++;
             _lastFireTime = t;

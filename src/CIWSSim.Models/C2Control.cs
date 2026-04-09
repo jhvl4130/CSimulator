@@ -76,7 +76,7 @@ public class C2Control : Model
         return TContinue;
     }
 
-    // ── ⓘ TrackInfo (SearchRadar → C2, 주기적) ──
+    // ── input: TrackInfo (SearchRadar → C2, 주기적) ──
 
     private double HandleTrackInfo(double t, TrackInfoEvent ev)
     {
@@ -113,7 +113,7 @@ public class C2Control : Model
         return TContinue;
     }
 
-    // ── ⓘ EngagementResult (FCS → C2, 주기적 + 종료) ──
+    // ── input: EngagementResult (FCS → C2, 주기적 + 종료) ──
 
     private double HandleEngagementResult(double t, EngagementResultEvent ev)
     {
@@ -145,14 +145,14 @@ public class C2Control : Model
         return TContinue;
     }
 
-    // ── ⓘ Health ──
+    // ── input: Health ──
 
     private double HandleHealth(double t, HealthEvent ev)
     {
         return TContinue;
     }
 
-    // ── ⓘ FailEvent (AssetZone → C2) ──
+    // ── input: FailEvent (AssetZone → C2) ──
 
     private double HandleFail(double t, FailEvent ev)
     {
@@ -171,7 +171,7 @@ public class C2Control : Model
         return TContinue;
     }
 
-    // ── ⓕ 위협평가 ──
+    // ── 위협평가 ──
 
     /// <summary>위협 우선순위 평가 (거리 기반: 가까운 것 우선).</summary>
     public List<int> ThreatEval()
@@ -189,7 +189,7 @@ public class C2Control : Model
         return threats.Select(t => t.id).ToList();
     }
 
-    // ── ⓕ 표적 할당 ──
+    // ── 표적 할당 ──
 
     /// <summary>ThreatEval 기반 표적 할당. 가용 FCS 반환.</summary>
     public Model? TargetAlloc(double t, int targetId, Model target)

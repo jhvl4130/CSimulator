@@ -114,7 +114,7 @@ public class FCS : Model
         return TContinue;
     }
 
-    // ── ⓘ TargetDesignation (C2 → FCS) ──
+    // ── input: TargetDesignation (C2 → FCS) ──
 
     private double HandleTargetDesignation(double t, TargetDesignationEvent ev)
     {
@@ -153,7 +153,7 @@ public class FCS : Model
         return TContinue;
     }
 
-    // ── ⓘ TrackInfo (TrackRadar → FCS) ──
+    // ── input: TrackInfo (TrackRadar → FCS) ──
 
     private double HandleTrackInfo(double t, TrackInfoEvent ev)
     {
@@ -209,7 +209,7 @@ public class FCS : Model
         return TContinue;
     }
 
-    // ── ⓘ DriveResult (Gun → FCS, 200Hz) ──
+    // ── input: DriveResult (Gun → FCS, 200Hz) ──
 
     private double HandleDriveResult(double t, DriveResultEvent ev)
     {
@@ -226,7 +226,7 @@ public class FCS : Model
         return TContinue;
     }
 
-    // ── ⓘ BulletPosition (Bullet → FCS) ──
+    // ── input: BulletPosition (Bullet → FCS) ──
 
     private double HandleBulletPosition(double t, BulletPositionEvent ev)
     {
@@ -234,7 +234,7 @@ public class FCS : Model
         return TContinue;
     }
 
-    // ── ⓘ Destroyed (Target → FCS) ──
+    // ── input: Destroyed (Target → FCS) ──
 
     private double HandleDestroyed(double t, DestroyedEvent ev)
     {
@@ -250,7 +250,7 @@ public class FCS : Model
         return TInfinite;
     }
 
-    // ── ⓘ FailEvent (AssetZone → C2 → FCS) ──
+    // ── input: FailEvent (AssetZone → C2 → FCS) ──
 
     private double HandleFail(double t, FailEvent ev)
     {
@@ -264,7 +264,7 @@ public class FCS : Model
         return TInfinite;
     }
 
-    // ── ⓘ TrackLost (TrackRadar → FCS) ──
+    // ── input: TrackLost (TrackRadar → FCS) ──
 
     private double HandleTrackLost(double t, TrackLostEvent ev)
     {
@@ -279,7 +279,7 @@ public class FCS : Model
         return TInfinite;
     }
 
-    // ── ⓘ CollideEvent (표적 → FCS 피격) ──
+    // ── input: CollideEvent (표적 → FCS 피격) ──
 
     private double HandleCollide(double t, CollideEvent ev)
     {

@@ -9,6 +9,7 @@ public abstract class Model
     public string Name { get; set; } = "";
     public ModelClass Class { get; set; }
     public int Type { get; set; }
+    public string Tag { get; set; } = "";
 
     public Engine? Engine { get; set; }
 
