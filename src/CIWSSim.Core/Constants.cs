@@ -13,19 +13,19 @@ public enum PhaseType
 {
     // 공통
     WaitStart = 0,
-    Run = 1,
-    End = 2,
+    Wait = 1,
+    Run = 2,
+    End = 3,
 
     // FCS 전용
-    Wait = 10,
-    StartEngage = 11,
-    TrackRcvd = 12,
-    FireOn = 13,
-    FireOff = 14,
-    TgtDestroyed = 15,
-    AttackedAlive = 16,
-    AttackedDie = 17,
-    Disabled = 18,
+    StartEngage = 10,
+    TrackRcvd = 11,
+    FireOn = 12,
+    FireOff = 13,
+    TgtDestroyed = 14,
+    AttackedAlive = 15,
+    AttackedDie = 16,
+    Disabled = 17,
 }
 
 public static class SimConstants
