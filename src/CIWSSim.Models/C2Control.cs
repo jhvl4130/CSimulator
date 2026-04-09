@@ -139,7 +139,34 @@ public class C2Control : Model
             WriteLog(t, "Miss", Id, ev.TargetId, ciwsId,
                 $"fired={ev.BulletFire} remain={ev.BulletRemain}");
             _targetFcsMap.Remove(ev.TargetId);
-            _latestTrackData.Remove(ev.TargetId);
+
+            // 표적이 살아있으면 다른 CIWS에 재할당
+            var target = Engine!.GetModel(ev.TargetId);
+            if (target is not null && target.IsEnabled
+                && _latestTrackData.ContainsKey(ev.TargetId))
+            {
+                var newFcs = TargetAlloc(t, ev.TargetId, target);
+                if (newFcs is not null)
+                {
+                    _targetFcsMap[ev.TargetId] = newFcs;
+                    int newCiwsId = (newFcs is FCS nf) ? nf.CiwsId : newFcs.Id;
+
+                    Logger.Dbg(DbgFlag.Init,
+                        $"{t:F6} [{Name}] Reassign target {ev.TargetId} → CIWS {newCiwsId}\n");
+                    WriteLog(t, "Reassign", Id, ev.TargetId, newCiwsId,
+                        $"Target {ev.TargetId} reassigned to CIWS {newCiwsId}");
+
+                    Engine!.SendEvent(newFcs, new TargetDesignationEvent(DesignationCmd.Start, ev.TargetId, target));
+                }
+                else
+                {
+                    Logger.Warn($"{t:F6} [{Name}] No available FCS to reassign target {ev.TargetId}\n");
+                }
+            }
+            else
+            {
+                _latestTrackData.Remove(ev.TargetId);
+            }
         }
 
         return TContinue;
@@ -191,17 +218,25 @@ public class C2Control : Model
 
     // ── 표적 할당 ──
 
-    /// <summary>ThreatEval 기반 표적 할당. 가용 FCS 반환.</summary>
+    /// <summary>표적에 가장 가까운 가용 FCS 할당.</summary>
     public Model? TargetAlloc(double t, int targetId, Model target)
     {
+        Model? best = null;
+        double bestDist = double.MaxValue;
+
         foreach (var fcs in FcsList)
         {
             if (fcs is FCS fcsModel && fcsModel.Phase == PhaseType.Wait)
             {
-                return fcs;
+                double dist = GeoUtil.Distance(fcs.Pos, target.Pos);
+                if (dist < bestDist)
+                {
+                    bestDist = dist;
+                    best = fcs;
+                }
             }
         }
-        return null;
+        return best;
     }
 
     // ── 로그 ──
