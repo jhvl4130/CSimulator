@@ -71,7 +71,8 @@ csvWriter.WriteLine(string.Join(',', StateRecord.CsvHeader));
 
 engine.OnModelTransitioned = (time, model) =>
 {
-    if (string.IsNullOrEmpty(model.Tag)) return;
+    if (string.IsNullOrEmpty(model.Tag) || !model.IsDirty) return;
+    model.IsDirty = false;
     var record = new StateRecord(time, model.Tag, model.Id, model.Pos, model.Pose);
     csvWriter.WriteLine(string.Join(',', record.ToCsvRow(engine.Origin)));
 };
