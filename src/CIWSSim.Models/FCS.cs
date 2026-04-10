@@ -176,33 +176,30 @@ public class FCS : Model
         _aimElevation = GeoUtil.RadToDeg(Math.Atan2(dz, dist2D));
         _trackDist = GeoUtil.Distance(Pos, _trackPos);
 
+        // 추적 중에는 사거리와 무관하게 항상 Gun에 조준 명령 (실 CIWS 동작에 가깝게)
+        if (GunModel is not null)
+        {
+            Engine!.SendEvent(GunModel, new DriveEvent(_aimAzimuth, _aimElevation));
+        }
+
         if (Phase == PhaseType.StartEngage || Phase == PhaseType.TrackRcvd)
         {
             Phase = PhaseType.TrackRcvd;
 
+            // 사거리 진입 시점에만 사격 시작
             if (_trackDist <= FireRange)
             {
                 Phase = PhaseType.FireOn;
                 Logger.Dbg(DbgFlag.Collide,
                     $"{t:F6} [{Name}] FireOn [{_target.Name}] dist={_trackDist:F1}m\n");
 
-                // Gun에 조준 + 사격 명령
                 if (GunModel is not null)
                 {
-                    Engine!.SendEvent(GunModel, new DriveEvent(_aimAzimuth, _aimElevation));
                     Engine!.SendEvent(GunModel, new FireEvent(FireCmd.On));
                 }
 
                 // C2에 사격 시작 보고
                 SendEngagementResult(EngagementStatus.FireStart);
-            }
-        }
-        else if (Phase == PhaseType.FireOn)
-        {
-            // 교전 중 조준 갱신
-            if (GunModel is not null)
-            {
-                Engine!.SendEvent(GunModel, new DriveEvent(_aimAzimuth, _aimElevation));
             }
         }
 
