@@ -9,6 +9,13 @@ public enum ModelClass
     Asset = 4
 }
 
+public enum TargetStatus
+{
+    Alive = 0,
+    Destroyed = 1,
+    Collided = 2,
+}
+
 public enum PhaseType
 {
     // 공통

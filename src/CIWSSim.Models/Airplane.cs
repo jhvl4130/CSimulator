@@ -73,7 +73,7 @@ public class Airplane : TargetBase
                     break;
                 }
 
-                if (CheckBuildingCollision(t) || CheckAssetZoneCollision(t))
+                if (CheckAssetZoneCollision(t))
                 {
                     tN = TInfinite;
                     break;

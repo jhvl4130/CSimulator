@@ -10,7 +10,10 @@
       "Bash(do sed:*)",
       "Bash(done)",
       "Bash(ls:*)",
-      "Bash(xxd \"D:/CSimulator/src/CIWSSim.App/input.json\")"
+      "Bash(xxd \"D:/CSimulator/src/CIWSSim.App/input.json\")",
+      "Bash(mkdir -p \"D:/CIWSSimulator/File\")",
+      "Bash(cp \"D:/CSimulator/src/CIWSSim.App/input.json\" \"D:/CIWSSimulator/File/input.json\")",
+      "Read(//d/CIWSSimulator/File/**)"
     ]
   }
 }

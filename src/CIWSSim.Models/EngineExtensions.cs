@@ -8,7 +8,7 @@ public static class EngineExtensions
 {
     // ── Airplane ──
 
-    public static void AddAirplane(this Engine engine, int id,
+    public static Airplane AddAirplane(this Engine engine, int id,
         double x, double y, double z, double speed,
         double azimuth, double elevation, double startT,
         double sizeX = 0.0, double sizeY = 0.0, double sizeZ = 0.0)
@@ -26,16 +26,17 @@ public static class EngineExtensions
             HalfZ = sizeZ / 2.0
         };
         engine.RegisterModel(model);
+        return model;
     }
 
     /// <summary>LLH 좌표로 Airplane 추가. 내부에서 ENU 변환.</summary>
-    public static void AddAirplane(this Engine engine, int id,
+    public static Airplane AddAirplane(this Engine engine, int id,
         LLHPos llh, double speed,
         double azimuth, double elevation, double startT,
         double sizeX = 0.0, double sizeY = 0.0, double sizeZ = 0.0)
     {
         var enu = GeoUtil.LlaToEnu(llh, engine.Origin);
-        engine.AddAirplane(id, enu.X, enu.Y, enu.Z, speed, azimuth, elevation, startT,
+        return engine.AddAirplane(id, enu.X, enu.Y, enu.Z, speed, azimuth, elevation, startT,
             sizeX, sizeY, sizeZ);
     }
 

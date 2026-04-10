@@ -11,6 +11,9 @@ namespace CIWSSimulator.Models;
 /// </summary>
 public abstract class TargetBase : Model
 {
+    /// <summary>표적 상태 (생존/파괴/충돌). Target.csv 출력용.</summary>
+    public TargetStatus Status { get; set; } = TargetStatus.Alive;
+
     protected TargetBase(int id) : base(id)
     {
         Class = ModelClass.Target;
@@ -47,6 +50,9 @@ public abstract class TargetBase : Model
                 Logger.Dbg(DbgFlag.Collide,
                     $"{t:F6} [{Name}] ↔ [{zone.Name}] Intercept FAILED (reached zone)\n");
 
+                Status = TargetStatus.Collided;
+                IsStateChanged = true;
+
                 if (zone.C2 is not null)
                 {
                     Engine.SendEvent(zone.C2, new FailEvent(this));
@@ -68,6 +74,9 @@ public abstract class TargetBase : Model
             $"{t:F6} [{Name}] Attacked, health={Health:F1}\n");
         if (Health <= 0.0)
         {
+            Status = TargetStatus.Destroyed;
+            IsStateChanged = true;
+
             if (attack.SourceFcs is not null)
             {
                 Engine!.SendEvent(attack.SourceFcs, new DestroyedEvent(Id));

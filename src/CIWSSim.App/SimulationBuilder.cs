@@ -3,6 +3,7 @@ using CIWSSimulator.Core;
 using CIWSSimulator.Core.Geometry;
 using CIWSSimulator.Core.Util;
 using CIWSSimulator.Models;
+using static CIWSSimulator.Core.SimConstants;
 
 namespace CIWSSimulator.App;
 
@@ -17,17 +18,23 @@ public class SimulationBuilder
     private const double FireRange = 1500.0;
     private const double AssetRadius = 2000.0;
 
+    /// <summary>모든 입출력 파일이 위치하는 디렉토리.</summary>
+    private const string FileDir = @"D:\CIWSSimulator\File";
+
     private readonly InputConfig _input;
     private readonly Engine _engine = new();
 
     private C2Control? _c2;
-    private StreamWriter? _csvWriter;
+    private StreamWriter? _targetCsvWriter;
+    private StreamWriter? _ciwsCsvWriter;
 
     public SimulationBuilder(string[] args)
     {
+        Directory.CreateDirectory(FileDir);
+
         var jsonPath = args.Length > 0
             ? args[0]
-            : Path.Combine(AppContext.BaseDirectory, "input.json");
+            : Path.Combine(FileDir, "input.json");
 
         var input = FileIO.LoadJson<InputConfig>(jsonPath);
         if (input is null)
@@ -43,7 +50,8 @@ public class SimulationBuilder
         _engine.Start(SimEndTime);
 
         _c2?.Dispose();
-        _csvWriter?.Dispose();
+        _targetCsvWriter?.Dispose();
+        _ciwsCsvWriter?.Dispose();
     }
 
     private void Build()
@@ -57,7 +65,7 @@ public class SimulationBuilder
 
         SetupCsvOutput();
 
-        _c2 = _engine.AddC2Control(500);
+        _c2 = _engine.AddC2Control(500, Path.Combine(FileDir, "event_log.csv"));
 
         RegisterCiws(ciwsItems);
 
@@ -90,16 +98,56 @@ public class SimulationBuilder
 
     private void SetupCsvOutput()
     {
-        _csvWriter = new StreamWriter("output.csv", false, Encoding.UTF8);
-        _csvWriter.WriteLine(string.Join(',', StateRecord.CsvHeader));
+        _targetCsvWriter = new StreamWriter(Path.Combine(FileDir, "Target.csv"), false, Encoding.UTF8);
+        _targetCsvWriter.WriteLine("Time,ID,Type,Status,Lat,Lon,Alt,Roll,Pitch,Yaw");
+
+        _ciwsCsvWriter = new StreamWriter(Path.Combine(FileDir, "CIWS.csv"), false, Encoding.UTF8);
+        _ciwsCsvWriter.WriteLine("Time,ID,Pitch,Yaw,Fire");
 
         _engine.OnModelTransitioned = (time, model) =>
         {
-            if (string.IsNullOrEmpty(model.Tag) || !model.IsStateChanged) return;
+            if (!model.IsStateChanged) return;
             model.IsStateChanged = false;
-            var record = new StateRecord(time, model.Tag, model.Id, model.Pos, model.Pose);
-            _csvWriter.WriteLine(string.Join(',', record.ToCsvRow(_engine.Origin)));
+
+            if (model.Class == ModelClass.Target && model is TargetBase target)
+            {
+                WriteTargetRow(time, target);
+            }
+            else if (model.Type == MtGun && model is Gun gun)
+            {
+                WriteCiwsRow(time, gun);
+            }
         };
+    }
+
+    private void WriteTargetRow(double time, TargetBase target)
+    {
+        var llh = GeoUtil.EnuToLla(target.Pos, _engine.Origin);
+        _targetCsvWriter!.WriteLine(string.Join(',', new[]
+        {
+            time.ToString("F4"),
+            target.InputId.ToString(),
+            target.Type.ToString(),
+            ((int)target.Status).ToString(),
+            llh.Lat.ToString("F8"),
+            llh.Lon.ToString("F8"),
+            llh.Hgt.ToString("F4"),
+            "0",
+            target.Pose.Pitch.ToString("F4"),
+            target.Pose.Yaw.ToString("F4"),
+        }));
+    }
+
+    private void WriteCiwsRow(double time, Gun gun)
+    {
+        _ciwsCsvWriter!.WriteLine(string.Join(',', new[]
+        {
+            time.ToString("F4"),
+            gun.InputId.ToString(),
+            gun.Pose.Pitch.ToString("F4"),
+            gun.Pose.Yaw.ToString("F4"),
+            gun.LastFireFlag ? "1" : "0",
+        }));
     }
 
     private void RegisterCiws(List<RecordItem> ciwsItems)
@@ -108,10 +156,13 @@ public class SimulationBuilder
         foreach (var ciws in ciwsItems)
         {
             var pos = new LLHPos(ciws.Position.Latitude, ciws.Position.Longitude, ciws.Position.Height);
-            _engine.AddCIWS(ciwsBaseId, pos,
+            var (fcs, trackRadar, gun) = _engine.AddCIWS(ciwsBaseId, pos,
                 TrackPeriod, FireRange,
                 4500, 1000, 10, 1000, 60,
                 _c2!);
+            fcs.InputId = ciws.Id;
+            trackRadar.InputId = ciws.Id;
+            gun.InputId = ciws.Id;
             ciwsBaseId += 10;
         }
     }
@@ -125,7 +176,8 @@ public class SimulationBuilder
             double azimuth = tgt.Rotation.Yaw;
             double elevation = tgt.Rotation.Pitch;
 
-            _engine.AddAirplane(tgtBaseId, pos, DefaultSpeed, azimuth, elevation, 0.0);
+            var airplane = _engine.AddAirplane(tgtBaseId, pos, DefaultSpeed, azimuth, elevation, 0.0);
+            airplane.InputId = tgt.Id;
             tgtBaseId++;
         }
     }

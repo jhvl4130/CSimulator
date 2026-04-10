@@ -6,6 +6,7 @@ namespace CIWSSimulator.Core;
 public abstract class Model
 {
     public int Id { get; }
+    public int InputId { get; set; }
     public string Name { get; set; } = "";
     public ModelClass Class { get; set; }
     public int Type { get; set; }

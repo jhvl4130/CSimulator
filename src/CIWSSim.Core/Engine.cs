@@ -145,10 +145,7 @@ public class Engine
 
         foreach (var model in _transitioned)
         {
-            if (model.IsEnabled)
-            {
-                OnModelTransitioned(TL, model);
-            }
+            OnModelTransitioned(TL, model);
         }
         _transitioned.Clear();
     }

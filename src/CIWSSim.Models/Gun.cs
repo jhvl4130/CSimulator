@@ -46,6 +46,12 @@ public class Gun : Model
     private double _lastFireTime;
     private int _totalFired;
 
+    /// <summary>직전 IntTrans 틱에서 발사가 발생했는지(CIWS.csv 트리거용).</summary>
+    private bool _prevFireOutput;
+
+    /// <summary>마지막으로 출력된 Fire 플래그(0/1). CIWS.csv 콜백에서 읽음.</summary>
+    public bool LastFireFlag { get; private set; }
+
     /// <summary>발사 간격 (초).</summary>
     private double FireInterval => 60.0 / Rpm;
 
@@ -78,6 +84,8 @@ public class Gun : Model
         IsStateChanged = false;
         _firing = false;
         _totalFired = 0;
+        _prevFireOutput = false;
+        LastFireFlag = false;
         return TInfinite;
     }
 
@@ -91,12 +99,14 @@ public class Gun : Model
 
         // 조준 완료 + 사격 on + 탄약 있으면 발사 (RPM 간격 준수)
         bool onTarget = IsOnTarget();
+        bool fireOccurred = false;
         if (_firing && onTarget && Ammo > 0 && (t - _lastFireTime) >= FireInterval)
         {
             // FireBullet(t);
             Ammo--;
             _totalFired++;
             _lastFireTime = t;
+            fireOccurred = true;
         }
 
         // DriveResult 피드백 (200Hz)
@@ -116,10 +126,22 @@ public class Gun : Model
         if (_curAzimuth != _prevAzimuth || _curElevation != _prevElevation)
         {
             Pose = new Pose(_curAzimuth, _curElevation, 0.0);
-            IsStateChanged = true;
         }
         _prevAzimuth = _curAzimuth;
         _prevElevation = _curElevation;
+
+        // CIWS.csv 출력 트리거: 발사 발생 또는 1→0 전이
+        if (fireOccurred)
+        {
+            LastFireFlag = true;
+            IsStateChanged = true;
+        }
+        else if (_prevFireOutput)
+        {
+            LastFireFlag = false;
+            IsStateChanged = true;
+        }
+        _prevFireOutput = fireOccurred;
 
         // 탄약 소진 시 사격 중단
         if (Ammo <= 0 && _firing)
