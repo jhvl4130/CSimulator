@@ -18,7 +18,7 @@ public class SimulationBuilder
     private const double FireRange = 1500.0;
     private const double AssetRadius = 2000.0;
 
-    /// <summary>모든 입출력 파일이 위치하는 디렉토리.</summary>
+    /// <summary>모든 입출력 파일이 위치하는 디렉토리</summary>
     private const string FileDir = @"D:\CIWSSimulator\File";
 
     private readonly InputConfig _input;

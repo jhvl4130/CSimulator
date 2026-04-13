@@ -75,7 +75,7 @@ Wait → StartEngage → TrackRcvd → FireOn → TgtDestroyed → Wait
 
 ## 좌표계
 
-- 내부: ENU (X=동, Y=북, Z=상). 외부: LLH (Lat/Lon/Hgt)
+- 내부: ENU (X=동, Y=북, Z=상) 외부: LLH (Lat/Lon/Hgt)
 - 방위각: 0°=북, 90°=동, 시계방향. 고각: 0°=수평, 양수=위
 - 변환: `GeoUtil.LlaToEnu()` / `EnuToLla()`
 

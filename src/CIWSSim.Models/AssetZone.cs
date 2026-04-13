@@ -12,13 +12,13 @@ namespace CIWSSimulator.Models;
 /// </summary>
 public class AssetZone : Model
 {
-    /// <summary>반구 반경 (m).</summary>
+    /// <summary>반구 반경 (m)</summary>
     public double Radius { get; set; }
 
-    /// <summary>방어존에 진입한 표적 수.</summary>
+    /// <summary>방어존에 진입한 표적 수</summary>
     public int HitCount { get; internal set; }
 
-    /// <summary>C2Control 참조 (생성 시 주입).</summary>
+    /// <summary>C2Control 참조 (생성 시 주입)</summary>
     public Model? C2 { get; set; }
 
     public AssetZone(int id) : base(id)

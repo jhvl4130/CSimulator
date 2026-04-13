@@ -6,12 +6,12 @@ using CIWSSimulator.Core.Util;
 namespace CIWSSimulator.Models;
 
 /// <summary>
-/// 비행체 공통 base (Airplane, Rocket, Drone 등).
+/// 비행체 공통 base (Airplane, Rocket, Drone 등)
 /// 건물/AssetZone 충돌 판정, 피격 처리, 종료 로직을 공유한다.
 /// </summary>
 public abstract class TargetBase : Model
 {
-    /// <summary>표적 상태 (생존/파괴/충돌). Target.csv 출력용.</summary>
+    /// <summary>표적 상태 (생존/파괴/충돌) Target.csv 출력용</summary>
     public TargetStatus Status { get; set; } = TargetStatus.Alive;
 
     protected TargetBase(int id) : base(id)
@@ -19,7 +19,7 @@ public abstract class TargetBase : Model
         Class = ModelClass.Target;
     }
 
-    /// <summary>건물 충돌 판정. 충돌 시 true 반환 (IsEnabled=false 됨).</summary>
+    /// <summary>건물 충돌 판정. 충돌 시 true 반환 (IsEnabled=false 됨)</summary>
     protected bool CheckBuildingCollision(double t)
     {
         foreach (var asset in Engine!.GetModelsByClass(ModelClass.Asset))
@@ -38,7 +38,7 @@ public abstract class TargetBase : Model
         return false;
     }
 
-    /// <summary>AssetZone 반구 진입 판정. 진입 시 true 반환 (IsEnabled=false 됨).</summary>
+    /// <summary>AssetZone 반구 진입 판정. 진입 시 true 반환 (IsEnabled=false 됨)</summary>
     protected bool CheckAssetZoneCollision(double t)
     {
         foreach (var asset in Engine!.GetModelsByClass(ModelClass.Asset))
@@ -66,7 +66,7 @@ public abstract class TargetBase : Model
         return false;
     }
 
-    /// <summary>피격 처리 (AttackEvent).</summary>
+    /// <summary>피격 처리 (AttackEvent)</summary>
     protected void HandleAttack(double t, AttackEvent attack)
     {
         Health -= attack.Power;
@@ -85,7 +85,7 @@ public abstract class TargetBase : Model
         }
     }
 
-    /// <summary>방어존/외부 충돌에 의한 파괴 처리.</summary>
+    /// <summary>방어존/외부 충돌에 의한 파괴 처리</summary>
     protected void HandleCollide(double t)
     {
         Logger.Dbg(DbgFlag.Collide, $"{t:F6} [{Name}] destroyed by defense zone\n");

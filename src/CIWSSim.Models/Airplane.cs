@@ -17,7 +17,7 @@ public class Airplane : TargetBase
         Power = 50.0;
     }
 
-    /// <summary>WaypointMover 설정 접근용.</summary>
+    /// <summary>WaypointMover 설정 접근용</summary>
     public WaypointMover Mover => _mover;
 
     public override double Init(double t)

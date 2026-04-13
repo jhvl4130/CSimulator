@@ -29,7 +29,7 @@ public static class EngineExtensions
         return model;
     }
 
-    /// <summary>LLH 좌표로 Airplane 추가. 내부에서 ENU 변환.</summary>
+    /// <summary>LLH 좌표로 Airplane 추가. 내부에서 ENU 변환</summary>
     public static Airplane AddAirplane(this Engine engine, int id,
         LLHPos llh, double speed,
         double azimuth, double elevation, double startT,
@@ -138,7 +138,7 @@ public static class EngineExtensions
 
     // ── Waypoint ──
 
-    /// <summary>LLH 좌표로 웨이포인트 추가.</summary>
+    /// <summary>LLH 좌표로 웨이포인트 추가</summary>
     public static void AddWaypointLLH(this Engine engine, int id,
         LLHPos llh, double speed)
     {
@@ -168,7 +168,7 @@ public static class EngineExtensions
         engine.RegisterModel(model);
     }
 
-    /// <summary>LLH 좌표로 반구 방어 영역 추가.</summary>
+    /// <summary>LLH 좌표로 반구 방어 영역 추가</summary>
     public static void AddAssetZone(this Engine engine, int id,
         LLHPos centerLlh, double radius)
     {
@@ -206,7 +206,7 @@ public static class EngineExtensions
         engine.AddRuntimeModel(model);
     }
 
-    /// <summary>LLH 좌표로 Launcher 추가.</summary>
+    /// <summary>LLH 좌표로 Launcher 추가</summary>
     public static void AddLauncher(this Engine engine, int id,
         LLHPos posLlh, double speed,
         double azimuth, double elevation, double startT)
@@ -313,7 +313,7 @@ public static class EngineExtensions
 
     // ── AssetZone (C2 참조 포함) ──
 
-    /// <summary>LLH 좌표로 반구 방어 영역 추가 (C2 참조 포함).</summary>
+    /// <summary>LLH 좌표로 반구 방어 영역 추가 (C2 참조 포함)</summary>
     public static void AddAssetZone(this Engine engine, int id,
         LLHPos centerLlh, double radius, C2Control? c2)
     {

@@ -9,7 +9,7 @@ public enum FireStatus
 }
 
 /// <summary>
-/// Gun → FCS: 구동 결과 (200Hz 주기적 보고).
+/// Gun → FCS: 구동 결과 (200Hz 주기적 보고)
 /// 실제 조준 방위각/고각, 각속도, 발사수, 잔탄, 사격 상태.
 /// </summary>
 public class DriveResultEvent : SimEvent

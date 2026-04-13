@@ -3,7 +3,7 @@ using CIWSSimulator.Core.Geometry;
 namespace CIWSSimulator.Core.Events;
 
 /// <summary>
-/// SearchRadar → C2 / TrackRadar → FCS: 추적 정보 (위치/속도/가속도).
+/// SearchRadar → C2 / TrackRadar → FCS: 추적 정보 (위치/속도/가속도)
 /// </summary>
 public class TrackInfoEvent : SimEvent
 {

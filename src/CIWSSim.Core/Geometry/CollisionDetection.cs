@@ -33,7 +33,7 @@ public static class CollisionDetection
     }
 
     /// <summary>
-    /// 선분(p0→p1)과 AABB(center ± half)의 교차 판정 (Slab method).
+    /// 선분(p0→p1)과 AABB(center ± half)의 교차 판정 (Slab method)
     /// 탄환 궤적 선분과 비행체 바운딩 박스 충돌 판정용.
     /// </summary>
     public static bool IsSegmentAABB(in XYZPos p0, in XYZPos p1,

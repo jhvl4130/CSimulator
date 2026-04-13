@@ -18,7 +18,7 @@ public static class GeoUtil
     // ── 거리 / 방위각 ──
 
     /// <summary>
-    /// 두 ENU 좌표 사이의 3D 유클리드 거리 (m).
+    /// 두 ENU 좌표 사이의 3D 유클리드 거리 (m)
     /// </summary>
     public static double Distance(in XYZPos a, in XYZPos b)
     {
@@ -29,7 +29,7 @@ public static class GeoUtil
     }
 
     /// <summary>
-    /// 두 ENU 좌표 사이의 2D 유클리드 거리 (m). Z 무시.
+    /// 두 ENU 좌표 사이의 2D 유클리드 거리 (m) Z 무시.
     /// </summary>
     public static double Distance2D(in XYZPos a, in XYZPos b)
     {
@@ -39,8 +39,8 @@ public static class GeoUtil
     }
 
     /// <summary>
-    /// a에서 b로의 진북 기준 방위각 (도). 0°=북, 90°=동, 시계 방향.
-    /// ENU 좌표 기준 (X=동, Y=북).
+    /// a에서 b로의 진북 기준 방위각 (도) 0°=북, 90°=동, 시계 방향.
+    /// ENU 좌표 기준 (X=동, Y=북)
     /// </summary>
     public static double Bearing(in XYZPos a, in XYZPos b)
     {
@@ -98,7 +98,7 @@ public static class GeoUtil
     }
 
     /// <summary>
-    /// 현재 위치에서 목표 지점을 향한 방위각과 고각을 반환 (도 단위).
+    /// 현재 위치에서 목표 지점을 향한 방위각과 고각을 반환 (도 단위)
     /// </summary>
     public static Pose NextPose(in XYZPos from, in XYZPos to)
     {

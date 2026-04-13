@@ -23,13 +23,13 @@ public class Engine
 
     public double TL { get; private set; }
 
-    /// <summary>ENU 원점의 LLH 좌표. ENU→LLH 변환 시 사용.</summary>
+    /// <summary>ENU 원점의 LLH 좌표. ENU→LLH 변환 시 사용</summary>
     public LLHPos Origin { get; set; }
 
-    /// <summary>ID로 모델 조회. 없으면 null.</summary>
+    /// <summary>ID로 모델 조회. 없으면 null</summary>
     public Model? GetModel(int id) => _modelMap.GetValueOrDefault(id);
 
-    /// <summary>지정 클래스에 해당하는 활성 모델 목록 반환.</summary>
+    /// <summary>지정 클래스에 해당하는 활성 모델 목록 반환</summary>
     public IEnumerable<Model> GetModelsByClass(ModelClass cls)
     {
         foreach (var (_, model) in _modelMap)
@@ -39,7 +39,7 @@ public class Engine
         }
     }
 
-    /// <summary>매 틱 상태 기록 콜백. 외부에서 CSV 출력 등을 연결.</summary>
+    /// <summary>매 틱 상태 기록 콜백. 외부에서 CSV 출력 등을 연결</summary>
     public Action<double, Model>? OnModelTransitioned { get; set; }
 
     private void ScheduleModel(Model model, double time)
@@ -171,7 +171,7 @@ public class Engine
         _schedTmp.Add(model);
     }
 
-    /// <summary>모델 제거 요청. 현재 버킷 처리 후 일괄 제거됨.</summary>
+    /// <summary>모델 제거 요청. 현재 버킷 처리 후 일괄 제거됨</summary>
     public void RemoveModel(int id)
     {
         _removeQueue.Add(id);

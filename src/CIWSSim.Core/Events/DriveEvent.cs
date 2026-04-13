@@ -1,6 +1,6 @@
 namespace CIWSSimulator.Core.Events;
 
-/// <summary>FCS → Gun: 조준 구동 명령 (방위각/고각).</summary>
+/// <summary>FCS → Gun: 조준 구동 명령 (방위각/고각)</summary>
 public class DriveEvent : SimEvent
 {
     public double Azimuth { get; }
