@@ -6,7 +6,9 @@ public enum TrackOrderCmd
     Stop
 }
 
-/// <summary>FCS → TrackRadar: 추적 명령 (시작/중지 + 주기 설정)</summary>
+/// <summary>
+/// FCS → TrackRadar: 추적 명령 (시작/중지 + 주기 설정)
+/// </summary>
 public class TrackOrderEvent : SimEvent
 {
     public int TargetId { get; }

@@ -19,16 +19,22 @@ public class Bullet : Model
 
     public double BulletPower { get; set; } = 10.0;
 
-    /// <summary>물리 속성</summary>
+    /// <summary>
+    /// 물리 속성
+    /// </summary>
     public double Mass { get; set; }
     public double Diameter { get; set; }
     public double DragCoefficient { get; set; }
     public double MaxRange { get; set; }
 
-    /// <summary>표적 ID</summary>
+    /// <summary>
+    /// 표적 ID
+    /// </summary>
     public int TgtId { get; set; }
 
-    /// <summary>소속 FCS 참조</summary>
+    /// <summary>
+    /// 소속 FCS 참조
+    /// </summary>
     public Model? Fcs { get; set; }
 
     public Bullet(int id) : base(id)
@@ -152,7 +158,9 @@ public class Bullet : Model
         return TContinue;
     }
 
-    /// <summary>명중 평가</summary>
+    /// <summary>
+    /// 명중 평가
+    /// </summary>
     public bool HitEval(XYZPos targetPos, double halfX, double halfY, double halfZ)
     {
         return CollisionDetection.IsSegmentAABB(

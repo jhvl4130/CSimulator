@@ -12,19 +12,29 @@ namespace CIWSSimulator.Models;
 /// </summary>
 public class SearchRadar : Model
 {
-    /// <summary>탐지 반경 (m)</summary>
+    /// <summary>
+    /// 탐지 반경 (m)
+    /// </summary>
     public double DetectRange { get; set; }
 
-    /// <summary>최소 수신 전력 임계값</summary>
+    /// <summary>
+    /// 최소 수신 전력 임계값
+    /// </summary>
     public double MinPower { get; set; }
 
-    /// <summary>탐지/추적 주기 (초)</summary>
+    /// <summary>
+    /// 탐지/추적 주기 (초)
+    /// </summary>
     public double DetectPeriod { get; set; } = 1.0;
 
-    /// <summary>C2Control 참조 (생성 시 주입)</summary>
+    /// <summary>
+    /// C2Control 참조 (생성 시 주입)
+    /// </summary>
     public Model? C2 { get; set; }
 
-    /// <summary>이전 추적 데이터 (속도/가속도 계산용)</summary>
+    /// <summary>
+    /// 이전 추적 데이터 (속도/가속도 계산용)
+    /// </summary>
     private readonly Dictionary<int, (XYZPos pos, XYZPos vel, double t)> _prevData = new();
 
     public SearchRadar(int id) : base(id)
@@ -96,7 +106,9 @@ public class SearchRadar : Model
         return DetectPeriod;
     }
 
-    /// <summary>레이더 수신 전력 계산 (거리 기반)</summary>
+    /// <summary>
+    /// 레이더 수신 전력 계산 (거리 기반)
+    /// </summary>
     public double RadarRecvPower(double dist)
     {
         if (dist <= 0) return double.MaxValue;

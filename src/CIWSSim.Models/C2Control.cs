@@ -13,19 +13,29 @@ namespace CIWSSimulator.Models;
 /// </summary>
 public class C2Control : Model
 {
-    /// <summary>FCS 리스트 (생성 시 주입)</summary>
+    /// <summary>
+    /// FCS 리스트 (생성 시 주입)
+    /// </summary>
     public List<Model> FcsList { get; } = new();
 
-    /// <summary>표적 ID → 할당된 FCS 매핑</summary>
+    /// <summary>
+    /// 표적 ID → 할당된 FCS 매핑
+    /// </summary>
     private readonly Dictionary<int, Model> _targetFcsMap = new();
 
-    /// <summary>최신 추적 데이터 (표적 ID → TrackInfo)</summary>
+    /// <summary>
+    /// 최신 추적 데이터 (표적 ID → TrackInfo)
+    /// </summary>
     private readonly Dictionary<int, TrackInfoEvent> _latestTrackData = new();
 
-    /// <summary>이벤트 로그 StreamWriter</summary>
+    /// <summary>
+    /// 이벤트 로그 StreamWriter
+    /// </summary>
     private StreamWriter? _logWriter;
 
-    /// <summary>이벤트 로그 출력 경로</summary>
+    /// <summary>
+    /// 이벤트 로그 출력 경로
+    /// </summary>
     public string? EventLogPath { get; set; } = "event_log.csv";
 
     public C2Control(int id) : base(id)
@@ -200,7 +210,9 @@ public class C2Control : Model
 
     // ── 위협평가 ──
 
-    /// <summary>위협 우선순위 평가 (거리 기반: 가까운 것 우선)</summary>
+    /// <summary>
+    /// 위협 우선순위 평가 (거리 기반: 가까운 것 우선)
+    /// </summary>
     public List<int> ThreatEval()
     {
         var threats = new List<(int id, double dist)>();
@@ -218,7 +230,9 @@ public class C2Control : Model
 
     // ── 표적 할당 ──
 
-    /// <summary>표적에 가장 가까운 가용 FCS 할당</summary>
+    /// <summary>
+    /// 표적에 가장 가까운 가용 FCS 할당
+    /// </summary>
     public Model? TargetAlloc(double t, int targetId, Model target)
     {
         Model? best = null;
@@ -249,7 +263,9 @@ public class C2Control : Model
         _logWriter?.Flush();
     }
 
-    /// <summary>시뮬레이션 종료 시 StreamWriter 정리</summary>
+    /// <summary>
+    /// 시뮬레이션 종료 시 StreamWriter 정리
+    /// </summary>
     public void Dispose()
     {
         _logWriter?.Dispose();

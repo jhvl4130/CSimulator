@@ -14,10 +14,14 @@ public class WaypointMover
     public double TurnRate { get; set; } = 30.0;   // 선회율 (deg/sec)
     public double AltRate { get; set; } = 50.0;     // 고도 변화율 (m/sec)
 
-    /// <summary>현재 추종 중인 웨이포인트 인덱스</summary>
+    /// <summary>
+    /// 현재 추종 중인 웨이포인트 인덱스
+    /// </summary>
     public int WaypointIndex => _waypointIndex;
 
-    /// <summary>모든 웨이포인트를 소진했는지 여부</summary>
+    /// <summary>
+    /// 모든 웨이포인트를 소진했는지 여부
+    /// </summary>
     public bool IsFinished(Model model) => _waypointIndex >= model.Waypoints.Count;
 
     public void Reset()

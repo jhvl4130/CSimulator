@@ -6,7 +6,9 @@ public enum FireCmd
     Off
 }
 
-/// <summary>FCS → Gun: 사격 명령 (on/off)</summary>
+/// <summary>
+/// FCS → Gun: 사격 명령 (on/off)
+/// </summary>
 public class FireEvent : SimEvent
 {
     public FireCmd Cmd { get; }

@@ -6,7 +6,9 @@ public enum DesignationCmd
     Stop
 }
 
-/// <summary>C2Control → FCS: 표적 지정 (교전 시작/중지)</summary>
+/// <summary>
+/// C2Control → FCS: 표적 지정 (교전 시작/중지)
+/// </summary>
 public class TargetDesignationEvent : SimEvent
 {
     public DesignationCmd Cmd { get; }

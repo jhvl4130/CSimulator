@@ -29,7 +29,9 @@ public class SimTimer : IDisposable
         _sw.Restart();
     }
 
-    /// <summary>Dispose 시 경과 시간을 로그로 출력한다</summary>
+    /// <summary>
+    /// Dispose 시 경과 시간을 로그로 출력한다
+    /// </summary>
     public void Dispose()
     {
         _sw.Stop();

@@ -6,30 +6,46 @@ namespace CIWSSimulator.Core;
 
 public class Engine
 {
-    /// <summary>등록된 전체 모델 (ID → Model)</summary>
+    /// <summary>
+    /// 등록된 전체 모델 (ID → Model)
+    /// </summary>
     private readonly Dictionary<int, Model> _modelMap = new();
 
-    /// <summary>시간 버킷별 스케줄 맵 (long 시간 → 클래스 우선순위별 모델 리스트)</summary>
+    /// <summary>
+    /// 시간 버킷별 스케줄 맵 (long 시간 → 클래스 우선순위별 모델 리스트)
+    /// </summary>
     private readonly SortedDictionary<long, List<Model>[]> _schedMap = new();
 
-    /// <summary>현재 버킷 처리 중 재스케줄링 대상 임시 버퍼</summary>
+    /// <summary>
+    /// 현재 버킷 처리 중 재스케줄링 대상 임시 버퍼
+    /// </summary>
     private readonly List<Model> _schedTmp = new();
 
-    /// <summary>현재 버킷에서 IntTrans 또는 ExtTrans가 호출된 모델 (상태 기록 대상)</summary>
+    /// <summary>
+    /// 현재 버킷에서 IntTrans 또는 ExtTrans가 호출된 모델 (상태 기록 대상)
+    /// </summary>
     private readonly HashSet<Model> _transitioned = new();
 
-    /// <summary>현재 버킷에서 제거 요청된 모델 ID</summary>
+    /// <summary>
+    /// 현재 버킷에서 제거 요청된 모델 ID
+    /// </summary>
     private readonly List<int> _removeQueue = new();
 
     public double TL { get; private set; }
 
-    /// <summary>ENU 원점의 LLH 좌표. ENU→LLH 변환 시 사용</summary>
+    /// <summary>
+    /// ENU 원점의 LLH 좌표. ENU→LLH 변환 시 사용
+    /// </summary>
     public LLHPos Origin { get; set; }
 
-    /// <summary>ID로 모델 조회. 없으면 null</summary>
+    /// <summary>
+    /// ID로 모델 조회. 없으면 null
+    /// </summary>
     public Model? GetModel(int id) => _modelMap.GetValueOrDefault(id);
 
-    /// <summary>지정 클래스에 해당하는 활성 모델 목록 반환</summary>
+    /// <summary>
+    /// 지정 클래스에 해당하는 활성 모델 목록 반환
+    /// </summary>
     public IEnumerable<Model> GetModelsByClass(ModelClass cls)
     {
         foreach (var (_, model) in _modelMap)
@@ -39,7 +55,9 @@ public class Engine
         }
     }
 
-    /// <summary>매 틱 상태 기록 콜백. 외부에서 CSV 출력 등을 연결</summary>
+    /// <summary>
+    /// 매 틱 상태 기록 콜백. 외부에서 CSV 출력 등을 연결
+    /// </summary>
     public Action<double, Model>? OnModelTransitioned { get; set; }
 
     private void ScheduleModel(Model model, double time)
@@ -171,7 +189,9 @@ public class Engine
         _schedTmp.Add(model);
     }
 
-    /// <summary>모델 제거 요청. 현재 버킷 처리 후 일괄 제거됨</summary>
+    /// <summary>
+    /// 모델 제거 요청. 현재 버킷 처리 후 일괄 제거됨
+    /// </summary>
     public void RemoveModel(int id)
     {
         _removeQueue.Add(id);

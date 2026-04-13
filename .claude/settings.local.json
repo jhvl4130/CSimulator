@@ -14,7 +14,8 @@
       "Bash(mkdir -p \"D:/CIWSSimulator/File\")",
       "Bash(cp \"D:/CSimulator/src/CIWSSim.App/input.json\" \"D:/CIWSSimulator/File/input.json\")",
       "Read(//d/CIWSSimulator/File/**)",
-      "Bash(xargs grep:*)"
+      "Bash(xargs grep:*)",
+      "Bash(python:*)"
     ]
   }
 }

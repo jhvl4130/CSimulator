@@ -13,19 +13,29 @@ namespace CIWSSimulator.Models;
 /// </summary>
 public class FCS : Model
 {
-    /// <summary>사격 가능 거리 (m)</summary>
+    /// <summary>
+    /// 사격 가능 거리 (m)
+    /// </summary>
     public double FireRange { get; set; } = 1500.0;
 
-    /// <summary>소속 CIWS ID</summary>
+    /// <summary>
+    /// 소속 CIWS ID
+    /// </summary>
     public int CiwsId { get; set; }
 
-    /// <summary>PHP 오차 모델</summary>
+    /// <summary>
+    /// PHP 오차 모델
+    /// </summary>
     public double PhpErr { get; set; }
 
-    /// <summary>추적 주기 (TrackRadar에 전달)</summary>
+    /// <summary>
+    /// 추적 주기 (TrackRadar에 전달)
+    /// </summary>
     public double TrackPeriod { get; set; } = 0.04;
 
-    /// <summary>교전 결과 보고 주기 (초)</summary>
+    /// <summary>
+    /// 교전 결과 보고 주기 (초)
+    /// </summary>
     public double EngagementReportPeriod { get; set; } = 1.0;
 
     // ── 참조 (생성 시 주입) ──
@@ -300,7 +310,9 @@ public class FCS : Model
 
     // ── 함수 ──
 
-    /// <summary>PHP 계산 (PhpErr 반영)</summary>
+    /// <summary>
+    /// PHP 계산 (PhpErr 반영)
+    /// </summary>
     public double PHPCalc()
     {
         if (_firedCount <= 0) return 0.0;
@@ -308,7 +320,9 @@ public class FCS : Model
         return Math.Max(0.0, rawPhp + PhpErr);
     }
 
-    /// <summary>피해 평가</summary>
+    /// <summary>
+    /// 피해 평가
+    /// </summary>
     public void DamageEval(double t)
     {
         double php = PHPCalc();

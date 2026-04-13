@@ -39,7 +39,9 @@ public static class SimConstants
 {
     public const double MovePeriod = 0.01;
 
-    /// <summary>Target/CIWS CSV 기록 주기 (초) 시뮬레이션 tick과 무관</summary>
+    /// <summary>
+    /// Target/CIWS CSV 기록 주기 (초) 시뮬레이션 tick과 무관
+    /// </summary>
     public const double OutputPeriod = 0.1;
 
     public const int ClsNum = 5;

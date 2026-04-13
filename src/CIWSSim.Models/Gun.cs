@@ -12,25 +12,39 @@ namespace CIWSSimulator.Models;
 /// </summary>
 public class Gun : Model
 {
-    /// <summary>발사율 (발/분)</summary>
+    /// <summary>
+    /// 발사율 (발/분)
+    /// </summary>
     public double Rpm { get; set; } = 4500.0;
 
-    /// <summary>탄속 (m/s)</summary>
+    /// <summary>
+    /// 탄속 (m/s)
+    /// </summary>
     public double BulletSpeed { get; set; } = 1000.0;
 
-    /// <summary>탄환 파워</summary>
+    /// <summary>
+    /// 탄환 파워
+    /// </summary>
     public double BulletPower { get; set; } = 10.0;
 
-    /// <summary>잔여 탄약수</summary>
+    /// <summary>
+    /// 잔여 탄약수
+    /// </summary>
     public int Ammo { get; set; } = 1000;
 
-    /// <summary>선회 속도 (도/초)</summary>
+    /// <summary>
+    /// 선회 속도 (도/초)
+    /// </summary>
     public double SlewRate { get; set; } = 60.0;
 
-    /// <summary>탄종</summary>
+    /// <summary>
+    /// 탄종
+    /// </summary>
     public string BulletType { get; set; } = "default";
 
-    /// <summary>FCS 참조 (생성 시 주입)</summary>
+    /// <summary>
+    /// FCS 참조 (생성 시 주입)
+    /// </summary>
     public Model? Fcs { get; set; }
 
     // ── 구동 상태 ──
@@ -46,19 +60,29 @@ public class Gun : Model
     private double _lastFireTime;
     private int _totalFired;
 
-    /// <summary>현재 틱의 발사 여부(0/1) CIWS.csv 콜백에서 읽음</summary>
+    /// <summary>
+    /// 현재 틱의 발사 여부(0/1) CIWS.csv 콜백에서 읽음
+    /// </summary>
     public bool LastFireFlag { get; private set; }
 
-    /// <summary>발사 간격 (초)</summary>
+    /// <summary>
+    /// 발사 간격 (초)
+    /// </summary>
     private double FireInterval => 60.0 / Rpm;
 
-    /// <summary>구동 주기 (초) 100Hz</summary>
+    /// <summary>
+    /// 구동 주기 (초) 100Hz
+    /// </summary>
     private const double DrivePeriod = 0.01;
 
-    /// <summary>조준 허용 오차 (도)</summary>
-    private const double AimTolerance = 0.5;
+    /// <summary>
+    /// 조준 허용 오차 (도)
+    /// </summary>
+    private const double AimTolerance = 0.2;
 
-    /// <summary>다음 탄환 ID</summary>
+    /// <summary>
+    /// 다음 탄환 ID
+    /// </summary>
     private int _nextBulletId;
 
     public Gun(int id) : base(id)

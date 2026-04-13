@@ -22,11 +22,15 @@ public readonly struct StateRecord
         Pose = pose;
     }
 
-    /// <summary>CSV 헤더</summary>
+    /// <summary>
+    /// CSV 헤더
+    /// </summary>
     public static readonly string[] CsvHeader =
         { "Time", "Tag", "ID", "Lat", "Lon", "Alt", "Roll", "Pitch", "Yaw" };
 
-    /// <summary>ENU→LLH 변환 후 CSV 행으로 변환</summary>
+    /// <summary>
+    /// ENU→LLH 변환 후 CSV 행으로 변환
+    /// </summary>
     public string[] ToCsvRow(LLHPos origin)
     {
         var llh = GeoUtil.EnuToLla(Pos, origin);

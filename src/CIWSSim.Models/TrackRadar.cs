@@ -12,16 +12,24 @@ namespace CIWSSimulator.Models;
 /// </summary>
 public class TrackRadar : Model
 {
-    /// <summary>추적 주기 (초) 예: 0.04 = 25Hz, 0.02 = 50Hz, 0.01 = 100Hz</summary>
+    /// <summary>
+    /// 추적 주기 (초) 예: 0.04 = 25Hz, 0.02 = 50Hz, 0.01 = 100Hz
+    /// </summary>
     public double TrackPeriod { get; set; } = 0.04;
 
-    /// <summary>FCS 참조 (생성 시 주입)</summary>
+    /// <summary>
+    /// FCS 참조 (생성 시 주입)
+    /// </summary>
     public Model? Fcs { get; set; }
 
-    /// <summary>현재 추적 중인 표적</summary>
+    /// <summary>
+    /// 현재 추적 중인 표적
+    /// </summary>
     private Model? _target;
 
-    /// <summary>이전 추적 위치 (속도 계산용)</summary>
+    /// <summary>
+    /// 이전 추적 위치 (속도 계산용)
+    /// </summary>
     private XYZPos _prevPos;
     private XYZPos _prevVel;
     private double _prevT;
