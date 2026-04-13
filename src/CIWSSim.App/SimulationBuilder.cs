@@ -27,6 +27,7 @@ public class SimulationBuilder
     private C2Control? _c2;
     private StreamWriter? _targetCsvWriter;
     private StreamWriter? _ciwsCsvWriter;
+    private readonly Dictionary<int, long> _lastLogIndex = new();
 
     public SimulationBuilder(string[] args)
     {
@@ -109,13 +110,19 @@ public class SimulationBuilder
             if (!model.IsStateChanged) return;
             model.IsStateChanged = false;
 
+            long logIndex = (long)Math.Round(time / OutputPeriod);
+            if (_lastLogIndex.TryGetValue(model.Id, out var last) && last == logIndex) return;
+            _lastLogIndex[model.Id] = logIndex;
+
+            double gridTime = logIndex * OutputPeriod;
+
             if (model.Class == ModelClass.Target && model is TargetBase target)
             {
-                WriteTargetRow(time, target);
+                WriteTargetRow(gridTime, target);
             }
             else if (model.Type == MtGun && model is Gun gun)
             {
-                WriteCiwsRow(time, gun);
+                WriteCiwsRow(gridTime, gun);
             }
         };
     }
