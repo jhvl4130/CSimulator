@@ -17,7 +17,10 @@
       "Bash(xargs grep:*)",
       "Bash(python:*)",
       "Bash(wc -l /d/CIWSSimulator/File/*.csv)",
-      "Bash(grep -c ',1$' /d/CIWSSimulator/File/CIWS.csv)"
+      "Bash(grep -c ',1$' /d/CIWSSimulator/File/CIWS.csv)",
+      "Read(//tmp/**)",
+      "Bash(awk -F, 'NR>1 {print $2}' /d/CIWSSimulator/File/event_log.csv)",
+      "Bash(grep -v ',0,$' /d/CIWSSimulator/File/CIWS.csv)"
     ]
   }
 }

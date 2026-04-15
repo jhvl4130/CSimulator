@@ -17,7 +17,7 @@ public class SimulationBuilder
     private const double TrackPeriod = 0.04;
     private const double FireRange = 10000.0;
     private const double SustainedFireKillSec = 3.0;
-    private const double AssetRadius = 2000.0;
+    private const double AssetRadius = 500.0;
 
     /// <summary>
     /// 모든 입출력 파일이 위치하는 디렉토리
@@ -87,16 +87,6 @@ public class SimulationBuilder
         if (_input.WorldMapLLH is not null)
             return new LLHPos(_input.WorldMapLLH.Latitude, _input.WorldMapLLH.Longitude, 0.0);
 
-        var areaRecord = _input.Records.FirstOrDefault(r => r.Tag == "Area");
-        if (areaRecord is not null && areaRecord.Items.Count > 0)
-        {
-            var a = areaRecord.Items[0].Position;
-            return new LLHPos(a.Latitude, a.Longitude, a.Height);
-        }
-
-        if (ciwsItems.Count > 0)
-            return CalcCenter(ciwsItems);
-
         throw new InvalidOperationException("Origin을 결정할 수 없습니다.");
     }
 
@@ -106,7 +96,8 @@ public class SimulationBuilder
         _targetCsvWriter.WriteLine("Time,ID,Type,Status,Lat,Lon,Alt,Roll,Pitch,Yaw");
 
         _ciwsCsvWriter = new StreamWriter(Path.Combine(FileDir, "CIWS.csv"), false, Encoding.UTF8);
-        _ciwsCsvWriter.WriteLine("Time,ID,Pitch,Yaw,Fire");
+        // 260415 Fire 옆에 Tag 컬럼 추가 (사격 대상 Tag, 0이면 빈 문자열)
+        _ciwsCsvWriter.WriteLine("Time,ID,Pitch,Yaw,Fire,Tag");
 
         _engine.OnModelTransitioned = (time, model) =>
         {
@@ -156,7 +147,10 @@ public class SimulationBuilder
             gun.InputId.ToString(),
             gun.Pose.Pitch.ToString("F4"),
             gun.Pose.Yaw.ToString("F4"),
-            gun.LastFireFlag ? "1" : "0",
+            // 260415 0/1 → 0 또는 사격 대상 InputId
+            // gun.LastFireFlag ? "1" : "0",
+            gun.LastFireTargetId.ToString(),
+            gun.LastFireTargetTag,
         }));
     }
 
@@ -168,7 +162,7 @@ public class SimulationBuilder
             var pos = new LLHPos(ciws.Position.Latitude, ciws.Position.Longitude, ciws.Position.Height);
             var (fcs, trackRadar, gun) = _engine.AddCIWS(ciwsBaseId, pos,
                 TrackPeriod, FireRange, SustainedFireKillSec,
-                4500, 1000, 10, 1000, 60,
+                4500, 1000, 10, int.MaxValue, 60,   // 260415 Ammo 무한 (탄 부족 Fail 방지)
                 _c2!);
             fcs.InputId = ciws.Id;
             trackRadar.InputId = ciws.Id;
@@ -186,7 +180,7 @@ public class SimulationBuilder
             double azimuth = tgt.Rotation.Yaw;
             double elevation = tgt.Rotation.Pitch;
 
-            var airplane = _engine.AddAirplane(tgtBaseId, pos, DefaultSpeed, azimuth, elevation, 0.0);
+            var airplane = _engine.AddAirplane(tgtBaseId, pos, DefaultSpeed, azimuth, elevation, tgt.StartT);
             airplane.InputId = tgt.Id;
             tgtBaseId++;
         }

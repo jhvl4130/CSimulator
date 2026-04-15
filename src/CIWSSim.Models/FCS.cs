@@ -214,7 +214,9 @@ public class FCS : Model
 
                 if (GunModel is not null)
                 {
-                    Engine!.SendEvent(GunModel, new FireEvent(FireCmd.On));
+                    // 260415 Gun이 CIWS.csv에 사격 대상 InputId와 Tag를 기록할 수 있도록 전달
+                    // Engine!.SendEvent(GunModel, new FireEvent(FireCmd.On));
+                    Engine!.SendEvent(GunModel, new FireEvent(FireCmd.On, _target.InputId, _target.Tag));
                 }
 
                 // C2에 사격 시작 보고
@@ -233,7 +235,7 @@ public class FCS : Model
         _bulletRemain = ev.BulletRemain;
         _firedCount = ev.BulletFire;
 
-        // [신규] 연속 사격 시간 추적. FireStatus.Firing이 SustainedFireKillSec 이상 유지되면
+        // 260415 연속 사격 시간 추적. FireStatus.Firing이 SustainedFireKillSec 이상 유지되면
         // 표적에 Health 전량 피해 AttackEvent → TargetBase가 Destroyed → HandleDestroyed 경로 진입
         if (ev.FireStatus == FireStatus.Firing && Phase == PhaseType.FireOn)
         {
@@ -413,7 +415,7 @@ public class FCS : Model
         _hitCount = 0;
         _bulletFire = 0;
         _bulletRemain = 0;
-        // [신규] 지속 사격 판정 상태도 초기화
+        // 260415 지속 사격 판정 상태도 초기화
         _firingStartT = -1.0;
         _killSent = false;
     }

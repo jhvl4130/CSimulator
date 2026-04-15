@@ -28,6 +28,7 @@ public class RecordItem
     public RecordPosition Position { get; set; } = new();
     public RecordRotation Rotation { get; set; } = new();
     public RecordCollision? Collision { get; set; }
+    public double StartT { get; set; }    // 260415 표적 시작 시각 (초)
 }
 
 public class RecordPosition

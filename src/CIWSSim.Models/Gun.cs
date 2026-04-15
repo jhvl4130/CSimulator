@@ -59,11 +59,17 @@ public class Gun : Model
     private bool _isFiring;
     private double _lastFireTime;
     private int _totalFired;
+    private int _currentTargetId;          // 260415 현재 사격 대상 InputId
+    private string _currentTargetTag = ""; // 260415 현재 사격 대상 Tag
 
     /// <summary>
     /// 현재 틱의 발사 여부(0/1) CIWS.csv 콜백에서 읽음
     /// </summary>
-    public bool LastFireFlag { get; private set; }
+    // 260415 0/1 대신 0 또는 사격 대상 InputId 기록으로 변경
+    // public bool LastFireFlag { get; private set; }
+    public int LastFireTargetId { get; private set; }
+    // 260415 사격 중이면 대상 Tag, 아니면 빈 문자열
+    public string LastFireTargetTag { get; private set; } = "";
 
     /// <summary>
     /// 발사 간격 (초)
@@ -105,7 +111,10 @@ public class Gun : Model
         IsStateChanged = false;
         _isFiring = false;
         _totalFired = 0;
-        LastFireFlag = false;
+        _currentTargetId = 0;
+        _currentTargetTag = "";
+        LastFireTargetId = 0;
+        LastFireTargetTag = "";
         return TInfinite;
     }
 
@@ -119,14 +128,14 @@ public class Gun : Model
 
         // 조준 완료 + 사격 on + 탄약 있으면 발사 (RPM 간격 준수)
         bool onTarget = IsOnTarget();
-        bool fireOccurred = false;
+        // 260415 fireOccurred(per-tick 발사) → firingNow(사격 상태) 기반으로 CSV 트리거 변경
         if (_isFiring && onTarget && Ammo > 0 && (t - _lastFireTime) >= FireInterval)
         {
-            FireBullet(t);
+            // 260415 탄환 객체 생성 비활성화 (O(bullets × targets) 충돌 검사 성능 이슈) — CIWS.csv Fire/Tag 기록은 상태 기반이라 영향 없음
+            // FireBullet(t);
             Ammo--;
             _totalFired++;
             _lastFireTime = t;
-            fireOccurred = true;
         }
 
         // DriveResult 피드백 (200Hz)
@@ -151,10 +160,14 @@ public class Gun : Model
         _prevAzimuth = _curAzimuth;
         _prevElevation = _curElevation;
 
-        // CIWS.csv 출력 트리거: 자세 변화 또는 발사
-        if (poseChanged || fireOccurred)
+        // CIWS.csv 출력 트리거: 자세 변화 또는 사격 중
+        // 260415 사격 중이면 매 틱 state change 발생 → 다운샘플링으로 10Hz 출력에 타겟ID/Tag 노출
+        bool firingNow = _isFiring && onTarget && Ammo > 0;
+        if (poseChanged || firingNow)
         {
-            LastFireFlag = fireOccurred;
+            // LastFireFlag = fireOccurred;
+            LastFireTargetId = firingNow ? _currentTargetId : 0;
+            LastFireTargetTag = firingNow ? _currentTargetTag : "";
             IsStateChanged = true;
         }
 
@@ -186,6 +199,8 @@ public class Gun : Model
 
             case FireEvent fire:
                 _isFiring = (fire.Cmd == FireCmd.On);
+                _currentTargetId = _isFiring ? fire.TargetId : 0;      // 260415
+                _currentTargetTag = _isFiring ? fire.TargetTag : "";   // 260415
                 if (_isFiring)
                 {
                     _lastFireTime = t - FireInterval; // 즉시 발사 가능

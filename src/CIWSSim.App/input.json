@@ -1,10 +1,9 @@
 {
   "version": 1,
   "groupKey": "DefaultGroup",
-  "worldMapLLH":
-  {
-    "latitude": 37.5863939999,
-    "longitude": 126.9749439999
+  "worldMapLLH": {
+    "latitude": 37.545,
+    "longitude": 126.990265
   },
   "records": [
     {
@@ -13,70 +12,231 @@
         {
           "id": 1,
           "position": {
-            "latitude": 37.464349336109841,
-            "longitude": 126.4488793954397,
-            "height": 30.444118932322624
+            "latitude": 37.54544915764123,
+            "longitude": 126.990265,
+            "height": 0.0
           },
           "rotation": {
-            "pitch": 0.00086644142901562253,
-            "yaw": 1.5217117760405843e-08,
-            "roll": 0.0020125458099739422
+            "pitch": 0.0,
+            "yaw": 0.0,
+            "roll": 0.0
           },
           "collision": {
             "centerLLH": {
-              "latitude": 37.464347534096746,
-              "longitude": 126.44887939546589,
-              "height": 33.844118938364936
+              "latitude": 37.54544915764123,
+              "longitude": 126.990265,
+              "height": 1.5
             },
-            "x": 216.158075,
-            "y": 191.124584,
-            "z": 173.41190399999999
+            "x": 3.0,
+            "y": 3.0,
+            "z": 3.0
           }
         },
         {
           "id": 2,
           "position": {
-            "latitude": 37.464729423036545,
-            "longitude": 126.45111722660019,
-            "height": 31.538798381069952
+            "latitude": 37.54536337616491,
+            "longitude": 126.99059797587338,
+            "height": 0.0
           },
           "rotation": {
-            "pitch": -0.00090979206231622779,
-            "yaw": -1.2960526873939664e-08,
-            "roll": 0.0016324264077505321
+            "pitch": 0.0,
+            "yaw": 0.0,
+            "roll": 0.0
           },
           "collision": {
             "centerLLH": {
-              "latitude": 37.464727621023911,
-              "longitude": 126.45111722657268,
-              "height": 34.938798386175463
+              "latitude": 37.54536337616491,
+              "longitude": 126.99059797587338,
+              "height": 1.5
             },
-            "x": 216.158075,
-            "y": 191.124584,
-            "z": 173.41190399999999
+            "x": 3.0,
+            "y": 3.0,
+            "z": 3.0
           }
         },
         {
           "id": 3,
           "position": {
-            "latitude": 37.46594260454011,
-            "longitude": 126.4506717699779,
-            "height": 34.686481337790077
+            "latitude": 37.54513879734429,
+            "longitude": 126.99080376628056,
+            "height": 0.0
           },
           "rotation": {
-            "pitch": -0.00055621167484787304,
-            "yaw": -2.0345396478660405e-09,
-            "roll": 0.0004191564678702927
+            "pitch": 0.0,
+            "yaw": 0.0,
+            "roll": 0.0
           },
           "collision": {
             "centerLLH": {
-              "latitude": 37.46594080252877,
-              "longitude": 126.45067176996106,
-              "height": 38.086481344054128
+              "latitude": 37.54513879734429,
+              "longitude": 126.99080376628056,
+              "height": 1.5
             },
-            "x": 216.158075,
-            "y": 191.124584,
-            "z": 173.41190399999999
+            "x": 3.0,
+            "y": 3.0,
+            "z": 3.0
+          }
+        },
+        {
+          "id": 4,
+          "position": {
+            "latitude": 37.54486120265571,
+            "longitude": 126.99080376628056,
+            "height": 0.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 0.0,
+            "roll": 0.0
+          },
+          "collision": {
+            "centerLLH": {
+              "latitude": 37.54486120265571,
+              "longitude": 126.99080376628056,
+              "height": 1.5
+            },
+            "x": 3.0,
+            "y": 3.0,
+            "z": 3.0
+          }
+        },
+        {
+          "id": 5,
+          "position": {
+            "latitude": 37.544636623835096,
+            "longitude": 126.99059797587338,
+            "height": 0.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 0.0,
+            "roll": 0.0
+          },
+          "collision": {
+            "centerLLH": {
+              "latitude": 37.544636623835096,
+              "longitude": 126.99059797587338,
+              "height": 1.5
+            },
+            "x": 3.0,
+            "y": 3.0,
+            "z": 3.0
+          }
+        },
+        {
+          "id": 6,
+          "position": {
+            "latitude": 37.544550842358774,
+            "longitude": 126.990265,
+            "height": 0.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 0.0,
+            "roll": 0.0
+          },
+          "collision": {
+            "centerLLH": {
+              "latitude": 37.544550842358774,
+              "longitude": 126.990265,
+              "height": 1.5
+            },
+            "x": 3.0,
+            "y": 3.0,
+            "z": 3.0
+          }
+        },
+        {
+          "id": 7,
+          "position": {
+            "latitude": 37.544636623835096,
+            "longitude": 126.9899320241266,
+            "height": 0.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 0.0,
+            "roll": 0.0
+          },
+          "collision": {
+            "centerLLH": {
+              "latitude": 37.544636623835096,
+              "longitude": 126.9899320241266,
+              "height": 1.5
+            },
+            "x": 3.0,
+            "y": 3.0,
+            "z": 3.0
+          }
+        },
+        {
+          "id": 8,
+          "position": {
+            "latitude": 37.54486120265571,
+            "longitude": 126.98972623371942,
+            "height": 0.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 0.0,
+            "roll": 0.0
+          },
+          "collision": {
+            "centerLLH": {
+              "latitude": 37.54486120265571,
+              "longitude": 126.98972623371942,
+              "height": 1.5
+            },
+            "x": 3.0,
+            "y": 3.0,
+            "z": 3.0
+          }
+        },
+        {
+          "id": 9,
+          "position": {
+            "latitude": 37.54513879734429,
+            "longitude": 126.98972623371942,
+            "height": 0.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 0.0,
+            "roll": 0.0
+          },
+          "collision": {
+            "centerLLH": {
+              "latitude": 37.54513879734429,
+              "longitude": 126.98972623371942,
+              "height": 1.5
+            },
+            "x": 3.0,
+            "y": 3.0,
+            "z": 3.0
+          }
+        },
+        {
+          "id": 10,
+          "position": {
+            "latitude": 37.54536337616491,
+            "longitude": 126.9899320241266,
+            "height": 0.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 0.0,
+            "roll": 0.0
+          },
+          "collision": {
+            "centerLLH": {
+              "latitude": 37.54536337616491,
+              "longitude": 126.9899320241266,
+              "height": 1.5
+            },
+            "x": 3.0,
+            "y": 3.0,
+            "z": 3.0
           }
         }
       ]
@@ -87,41 +247,702 @@
         {
           "id": 1,
           "position": {
-            "latitude": 37.466397058909443,
-            "longitude": 126.44991089841811,
-            "height": 2450.714901624845
+            "latitude": 37.564249613195386,
+            "longitude": 126.990265,
+            "height": 95.0
           },
           "rotation": {
-            "pitch": 4.7703194844569319e-05,
-            "yaw": -4.4053649617126212e-11,
-            "roll": -0.00010580204872212559
-          }
+            "pitch": 0.0,
+            "yaw": 180.0,
+            "roll": 0.0
+          },
+          "startT": 0.0
         },
         {
           "id": 2,
           "position": {
-            "latitude": 37.466355541947713,
-            "longitude": 126.45013324666448,
-            "height": 2452.1009104382888
+            "latitude": 37.56844719559469,
+            "longitude": 127.00343146935623,
+            "height": 95.0
           },
           "rotation": {
-            "pitch": -0.00012877678585709873,
-            "yaw": 7.2287034016471826e-11,
-            "roll": -6.4325587061375713e-05
-          }
+            "pitch": 0.0,
+            "yaw": 204.0,
+            "roll": 0.0
+          },
+          "startT": 0.0
         },
         {
           "id": 3,
           "position": {
-            "latitude": 37.466235199618168,
-            "longitude": 126.45010234144669,
-            "height": 2452.4580080107212
+            "latitude": 37.557021804992964,
+            "longitude": 127.007104435583,
+            "height": 95.0
           },
           "rotation": {
-            "pitch": -0.00010424717595469703,
-            "yaw": -5.0931703299283988e-11,
-            "roll": 5.600644408892158e-05
-          }
+            "pitch": 0.0,
+            "yaw": 228.0,
+            "roll": 0.0
+          },
+          "startT": 0.0
+        },
+        {
+          "id": 4,
+          "position": {
+            "latitude": 37.55015532993085,
+            "longitude": 127.01027631899267,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 252.0,
+            "roll": 0.0
+          },
+          "startT": 0.0
+        },
+        {
+          "id": 5,
+          "position": {
+            "latitude": 37.542183014519864,
+            "longitude": 127.02406834522719,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 276.0,
+            "roll": 0.0
+          },
+          "startT": 0.0
+        },
+        {
+          "id": 6,
+          "position": {
+            "latitude": 37.53280857830959,
+            "longitude": 127.01689739783781,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 300.0,
+            "roll": 0.0
+          },
+          "startT": 0.0
+        },
+        {
+          "id": 7,
+          "position": {
+            "latitude": 37.532541388631834,
+            "longitude": 127.00168131565894,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 324.0,
+            "roll": 0.0
+          },
+          "startT": 0.0
+        },
+        {
+          "id": 8,
+          "position": {
+            "latitude": 37.53370262222273,
+            "longitude": 126.99329363862563,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 348.0,
+            "roll": 0.0
+          },
+          "startT": 0.0
+        },
+        {
+          "id": 9,
+          "position": {
+            "latitude": 37.52491577284041,
+            "longitude": 126.98488075355442,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 12.0,
+            "roll": 0.0
+          },
+          "startT": 0.0
+        },
+        {
+          "id": 10,
+          "position": {
+            "latitude": 37.53461782385986,
+            "longitude": 126.98075140361755,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 36.0,
+            "roll": 0.0
+          },
+          "startT": 0.0
+        },
+        {
+          "id": 11,
+          "position": {
+            "latitude": 37.53794180849503,
+            "longitude": 126.97484624335705,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 60.0,
+            "roll": 0.0
+          },
+          "startT": 0.0
+        },
+        {
+          "id": 12,
+          "position": {
+            "latitude": 37.54258544101703,
+            "longitude": 126.96129070409097,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 84.0,
+            "roll": 0.0
+          },
+          "startT": 0.0
+        },
+        {
+          "id": 13,
+          "position": {
+            "latitude": 37.54777594688584,
+            "longitude": 126.97948967438855,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 108.0,
+            "roll": 0.0
+          },
+          "startT": 0.0
+        },
+        {
+          "id": 14,
+          "position": {
+            "latitude": 37.551869602853124,
+            "longitude": 126.98064246538114,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 132.0,
+            "roll": 0.0
+          },
+          "startT": 0.0
+        },
+        {
+          "id": 15,
+          "position": {
+            "latitude": 37.56493011625549,
+            "longitude": 126.9790735010472,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 156.0,
+            "roll": 0.0
+          },
+          "startT": 0.0
+        },
+        {
+          "id": 16,
+          "position": {
+            "latitude": 37.56355001536268,
+            "longitude": 126.99523794984208,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 192.0,
+            "roll": 0.0
+          },
+          "startT": 10.0
+        },
+        {
+          "id": 17,
+          "position": {
+            "latitude": 37.555018170827466,
+            "longitude": 127.00429786298584,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 228.0,
+            "roll": 0.0
+          },
+          "startT": 10.0
+        },
+        {
+          "id": 18,
+          "position": {
+            "latitude": 37.54635632634229,
+            "longitude": 127.00654068473902,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 264.0,
+            "roll": 0.0
+          },
+          "startT": 10.0
+        },
+        {
+          "id": 19,
+          "position": {
+            "latitude": 37.53252339885484,
+            "longitude": 127.0175203779042,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 300.0,
+            "roll": 0.0
+          },
+          "startT": 10.0
+        },
+        {
+          "id": 20,
+          "position": {
+            "latitude": 37.529498798467955,
+            "longitude": 126.9989694991855,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 336.0,
+            "roll": 0.0
+          },
+          "startT": 10.0
+        },
+        {
+          "id": 21,
+          "position": {
+            "latitude": 37.52449735144125,
+            "longitude": 126.98476858175347,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 12.0,
+            "roll": 0.0
+          },
+          "startT": 10.0
+        },
+        {
+          "id": 22,
+          "position": {
+            "latitude": 37.52963880473122,
+            "longitude": 126.9687479434217,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 48.0,
+            "roll": 0.0
+          },
+          "startT": 10.0
+        },
+        {
+          "id": 23,
+          "position": {
+            "latitude": 37.543852339248836,
+            "longitude": 126.97649326675928,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 84.0,
+            "roll": 0.0
+          },
+          "startT": 10.0
+        },
+        {
+          "id": 24,
+          "position": {
+            "latitude": 37.55847472923677,
+            "longitude": 126.96082919186345,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 120.0,
+            "roll": 0.0
+          },
+          "startT": 10.0
+        },
+        {
+          "id": 25,
+          "position": {
+            "latitude": 37.55320651845815,
+            "longitude": 126.98565673572531,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 156.0,
+            "roll": 0.0
+          },
+          "startT": 10.0
+        },
+        {
+          "id": 26,
+          "position": {
+            "latitude": 37.56232487230053,
+            "longitude": 126.99999355791321,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 204.0,
+            "roll": 0.0
+          },
+          "startT": 25.0
+        },
+        {
+          "id": 27,
+          "position": {
+            "latitude": 37.55048970450387,
+            "longitude": 127.00225736627785,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 240.0,
+            "roll": 0.0
+          },
+          "startT": 25.0
+        },
+        {
+          "id": 28,
+          "position": {
+            "latitude": 37.542183014519864,
+            "longitude": 127.02406834522719,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 276.0,
+            "roll": 0.0
+          },
+          "startT": 25.0
+        },
+        {
+          "id": 29,
+          "position": {
+            "latitude": 37.538989097503524,
+            "longitude": 126.99868471779149,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 312.0,
+            "roll": 0.0
+          },
+          "startT": 25.0
+        },
+        {
+          "id": 30,
+          "position": {
+            "latitude": 37.53230788422554,
+            "longitude": 126.99366754462879,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 348.0,
+            "roll": 0.0
+          },
+          "startT": 25.0
+        },
+        {
+          "id": 31,
+          "position": {
+            "latitude": 37.529498798467955,
+            "longitude": 126.98156050081448,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 24.0,
+            "roll": 0.0
+          },
+          "startT": 25.0
+        },
+        {
+          "id": 32,
+          "position": {
+            "latitude": 37.53352152694646,
+            "longitude": 126.96519005232813,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 60.0,
+            "roll": 0.0
+          },
+          "startT": 25.0
+        },
+        {
+          "id": 33,
+          "position": {
+            "latitude": 37.54656499193341,
+            "longitude": 126.97148536376267,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 96.0,
+            "roll": 0.0
+          },
+          "startT": 25.0
+        },
+        {
+          "id": 34,
+          "position": {
+            "latitude": 37.559025439158454,
+            "longitude": 126.97061899181982,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 132.0,
+            "roll": 0.0
+          },
+          "startT": 25.0
+        },
+        {
+          "id": 35,
+          "position": {
+            "latitude": 37.5694079149509,
+            "longitude": 126.98372164494461,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 168.0,
+            "roll": 0.0
+          },
+          "startT": 25.0
+        },
+        {
+          "id": 36,
+          "position": {
+            "latitude": 37.567594755554545,
+            "longitude": 126.99632227725127,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 192.0,
+            "roll": 0.0
+          },
+          "startT": 40.0
+        },
+        {
+          "id": 37,
+          "position": {
+            "latitude": 37.56057326421021,
+            "longitude": 127.00453539457368,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 216.0,
+            "roll": 0.0
+          },
+          "startT": 40.0
+        },
+        {
+          "id": 38,
+          "position": {
+            "latitude": 37.553983152824514,
+            "longitude": 127.00988887209103,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 240.0,
+            "roll": 0.0
+          },
+          "startT": 40.0
+        },
+        {
+          "id": 39,
+          "position": {
+            "latitude": 37.54768284331441,
+            "longitude": 127.02245866212114,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 264.0,
+            "roll": 0.0
+          },
+          "startT": 40.0
+        },
+        {
+          "id": 40,
+          "position": {
+            "latitude": 37.538258414705815,
+            "longitude": 127.01643364791349,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 288.0,
+            "roll": 0.0
+          },
+          "startT": 40.0
+        },
+        {
+          "id": 41,
+          "position": {
+            "latitude": 37.52868469322384,
+            "longitude": 127.0131185197198,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 312.0,
+            "roll": 0.0
+          },
+          "startT": 40.0
+        },
+        {
+          "id": 42,
+          "position": {
+            "latitude": 37.53679348154186,
+            "longitude": 126.99487326427467,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 336.0,
+            "roll": 0.0
+          },
+          "startT": 40.0
+        },
+        {
+          "id": 43,
+          "position": {
+            "latitude": 37.528317001897335,
+            "longitude": 126.990265,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 0.0,
+            "roll": 0.0
+          },
+          "startT": 40.0
+        },
+        {
+          "id": 44,
+          "position": {
+            "latitude": 37.526242243524244,
+            "longitude": 126.97973182451501,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 24.0,
+            "roll": 0.0
+          },
+          "startT": 40.0
+        },
+        {
+          "id": 45,
+          "position": {
+            "latitude": 37.53813039714688,
+            "longitude": 126.98064246538114,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 48.0,
+            "roll": 0.0
+          },
+          "startT": 40.0
+        },
+        {
+          "id": 46,
+          "position": {
+            "latitude": 37.53667215934247,
+            "longitude": 126.95793902316566,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 72.0,
+            "roll": 0.0
+          },
+          "startT": 40.0
+        },
+        {
+          "id": 47,
+          "position": {
+            "latitude": 37.54634142165721,
+            "longitude": 126.97416816893943,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 96.0,
+            "roll": 0.0
+          },
+          "startT": 40.0
+        },
+        {
+          "id": 48,
+          "position": {
+            "latitude": 37.55077488395862,
+            "longitude": 126.97764965365576,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 120.0,
+            "roll": 0.0
+          },
+          "startT": 40.0
+        },
+        {
+          "id": 49,
+          "position": {
+            "latitude": 37.55642039375416,
+            "longitude": 126.9798000439793,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 144.0,
+            "roll": 0.0
+          },
+          "startT": 40.0
+        },
+        {
+          "id": 50,
+          "position": {
+            "latitude": 37.560063170369695,
+            "longitude": 126.98622681516582,
+            "height": 95.0
+          },
+          "rotation": {
+            "pitch": 0.0,
+            "yaw": 168.0,
+            "roll": 0.0
+          },
+          "startT": 40.0
         }
       ]
     }
