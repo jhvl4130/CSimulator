@@ -15,6 +15,8 @@ public class Drone : TargetBase
         Type = MtDrone;
         Name = $"Drone-{id}";
         Power = 50.0;
+        _mover.PoseTurnRate = 50.0;
+        _mover.AltRate = 60.0;
     }
 
     public WaypointMover Mover => _mover;

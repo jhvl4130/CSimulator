@@ -63,7 +63,7 @@
       "position": { "lat": 37.0, "lon": 126.0, "alt": 0.0 },
       "trackRadar": { "trackPeriod": 0.04 },
       "fcs": { "fireRange": 1500.0 },
-      "gun": { "rpm": 4500, "bulletSpeed": 1000, "bulletPower": 10, "ammo": 1000, "slewRate": 60 }
+      "gun": { "rpm": 4500, "bulletSpeed": 1000, "bulletPower": 10, "ammo": 1000, "poseTurnRate": 60 }
     }
   ]
 }

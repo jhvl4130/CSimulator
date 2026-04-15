@@ -15,6 +15,8 @@ public class Missile : TargetBase
         Type = MtMissile;
         Name = $"Missile-{id}";
         Power = 50.0;
+        _mover.PoseTurnRate = 40.0;
+        _mover.AltRate = 80.0;
     }
 
     public WaypointMover Mover => _mover;

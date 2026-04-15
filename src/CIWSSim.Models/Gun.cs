@@ -8,7 +8,7 @@ namespace CIWSSimulator.Models;
 
 /// <summary>
 /// 함포 모델. FCS 명령에 따라 조준 방향으로 Bullet을 생성한다.
-/// Drive/Fire 분리, SlewRate 기반 구동 역학, 200Hz DriveResult 피드백.
+/// Drive/Fire 분리, PoseTurnRate 기반 구동 역학, 200Hz DriveResult 피드백.
 /// </summary>
 public class Gun : Model
 {
@@ -35,7 +35,7 @@ public class Gun : Model
     /// <summary>
     /// 선회 속도 (도/초)
     /// </summary>
-    public double SlewRate { get; set; } = 60.0;
+    public double PoseTurnRate { get; set; } = 60.0;
 
     /// <summary>
     /// 탄종
@@ -47,7 +47,7 @@ public class Gun : Model
     /// </summary>
     public Model? Fcs { get; set; }
 
-    // ── 구동 상태 ──
+    // 구동 상태 
     private double _cmdAzimuth;
     private double _cmdElevation;
     private double _curAzimuth;
@@ -55,8 +55,8 @@ public class Gun : Model
     private double _prevAzimuth;
     private double _prevElevation;
 
-    // ── 사격 상태 ──
-    private bool _firing;
+    // 사격 상태
+    private bool _isFiring;
     private double _lastFireTime;
     private int _totalFired;
 
@@ -103,7 +103,7 @@ public class Gun : Model
         Phase = PhaseType.WaitStart;
         IsEnabled = true;
         IsStateChanged = false;
-        _firing = false;
+        _isFiring = false;
         _totalFired = 0;
         LastFireFlag = false;
         return TInfinite;
@@ -114,13 +114,13 @@ public class Gun : Model
         if (Phase != PhaseType.Run || !IsEnabled)
             return TInfinite;
 
-        // SlewRate 기반 조준각 갱신
-        UpdateSlew(DrivePeriod);
+        // PoseTurnRate 기반 조준각 갱신
+        UpdatePose(DrivePeriod);
 
         // 조준 완료 + 사격 on + 탄약 있으면 발사 (RPM 간격 준수)
         bool onTarget = IsOnTarget();
         bool fireOccurred = false;
-        if (_firing && onTarget && Ammo > 0 && (t - _lastFireTime) >= FireInterval)
+        if (_isFiring && onTarget && Ammo > 0 && (t - _lastFireTime) >= FireInterval)
         {
             // FireBullet(t);
             Ammo--;
@@ -130,8 +130,8 @@ public class Gun : Model
         }
 
         // DriveResult 피드백 (200Hz)
-        FireStatus fireStatus = !_firing ? FireStatus.Idle : (onTarget ? FireStatus.Firing : FireStatus.Slewing);
-        if (Ammo <= 0 && _firing) fireStatus = FireStatus.AmmoOut;
+        FireStatus fireStatus = !_isFiring ? FireStatus.Idle : (onTarget ? FireStatus.Firing : FireStatus.Slewing);
+        if (Ammo <= 0 && _isFiring) fireStatus = FireStatus.AmmoOut;
 
         double azVel = (_curAzimuth - _prevAzimuth) / DrivePeriod;
         double elVel = (_curElevation - _prevElevation) / DrivePeriod;
@@ -159,9 +159,9 @@ public class Gun : Model
         }
 
         // 탄약 소진 시 사격 중단
-        if (Ammo <= 0 && _firing)
+        if (Ammo <= 0 && _isFiring)
         {
-            _firing = false;
+            _isFiring = false;
             Logger.Dbg(DbgFlag.Collide, $"{t:F6} [{Name}] Ammo depleted\n");
         }
 
@@ -185,8 +185,8 @@ public class Gun : Model
                 return TContinue;
 
             case FireEvent fire:
-                _firing = (fire.Cmd == FireCmd.On);
-                if (_firing)
+                _isFiring = (fire.Cmd == FireCmd.On);
+                if (_isFiring)
                 {
                     _lastFireTime = t - FireInterval; // 즉시 발사 가능
                     if (Phase == PhaseType.WaitStart)
@@ -203,11 +203,11 @@ public class Gun : Model
         return TContinue;
     }
 
-    // ── Slew Dynamics ──
+    // 자세 계산
 
-    private void UpdateSlew(double dt)
+    private void UpdatePose(double dt)
     {
-        double maxDelta = SlewRate * dt;
+        double maxDelta = PoseTurnRate * dt;
 
         double azDiff = NormalizeAngle(_cmdAzimuth - _curAzimuth);
         double elDiff = _cmdElevation - _curElevation;
@@ -226,6 +226,11 @@ public class Gun : Model
         return azDiff <= AimTolerance && elDiff <= AimTolerance;
     }
 
+    /// <summary>
+    /// -180 ~ 180으로 정규화
+    /// </summary>
+    /// <param name="angle"></param>
+    /// <returns></returns>
     private static double NormalizeAngle(double angle)
     {
         while (angle > 180.0) angle -= 360.0;
@@ -233,6 +238,11 @@ public class Gun : Model
         return angle;
     }
 
+    /// <summary>
+    /// 0 ~ 360으로 정규화
+    /// </summary>
+    /// <param name="angle"></param>
+    /// <returns></returns>
     private static double NormalizeAngle360(double angle)
     {
         while (angle >= 360.0) angle -= 360.0;
@@ -245,7 +255,7 @@ public class Gun : Model
         return val < min ? min : (val > max ? max : val);
     }
 
-    // ── Bullet 생성 ──
+    // Bullet 생성
 
     private void FireBullet(double t)
     {

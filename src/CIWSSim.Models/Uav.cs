@@ -15,6 +15,8 @@ public class Uav : TargetBase
         Type = MtUav;
         Name = $"Uav-{id}";
         Power = 50.0;
+        _mover.PoseTurnRate = 30.0;
+        _mover.AltRate = 40.0;
     }
 
     public WaypointMover Mover => _mover;

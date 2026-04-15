@@ -264,7 +264,7 @@ public static class EngineExtensions
         double trackPeriod,
         double fireRange,
         double rpm, double bulletSpeed, double bulletPower,
-        int ammo, double slewRate,
+        int ammo, double poseTurnRate,
         C2Control c2)
     {
         var enu = GeoUtil.LlaToEnu(posLlh, engine.Origin);
@@ -296,7 +296,7 @@ public static class EngineExtensions
             BulletSpeed = bulletSpeed,
             BulletPower = bulletPower,
             Ammo = ammo,
-            SlewRate = slewRate
+            PoseTurnRate = poseTurnRate
         };
         gun.SetBulletIdStart(ciwsId * 10000);
 

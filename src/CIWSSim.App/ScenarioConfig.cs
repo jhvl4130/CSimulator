@@ -101,7 +101,7 @@ public class GunDto
     public double BulletSpeed { get; set; } = 1000.0;
     public double BulletPower { get; set; } = 10.0;
     public int Ammo { get; set; } = 1000;
-    public double SlewRate { get; set; } = 60.0;
+    public double PoseTurnRate { get; set; } = 60.0;
 }
 
 public class AssetZoneDto

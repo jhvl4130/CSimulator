@@ -4,15 +4,15 @@ namespace CIWSSimulator.Core.Geometry;
 
 /// <summary>
 /// 웨이포인트 기반 Fly-Over 이동 로직.
-/// 비행체는 웨이포인트에 스냅하지 않고, 선회율 제한 내에서 자연스럽게
-/// 회전하며 통과한다. 웨이포인트 통과 판정은 진행 방향 기준 내적으로 수행.
+/// 비행체는 웨이포인트에서 꺾지 않고 선회율 제한 내에서 자연스럽게 회전하며 통과
+/// 웨이포인트 통과 판정은 진행 방향 기준 내적으로 수행.
 /// </summary>
 public class WaypointMover
 {
     private int _waypointIndex;
 
-    public double TurnRate { get; set; } = 30.0;   // 선회율 (deg/sec)
-    public double AltRate { get; set; } = 50.0;     // 고도 변화율 (m/sec)
+    public double PoseTurnRate { get; set; } = 30.0;   // 선회율 (deg/sec)
+    public double AltRate { get; set; } = 50.0;        // 고도 변화율 (m/sec)
 
     /// <summary>
     /// 현재 추종 중인 웨이포인트 인덱스
@@ -54,8 +54,8 @@ public class WaypointMover
         // 현재 위치 → 목표 웨이포인트 방위각
         double targetYaw = GeoUtil.Bearing(model.Pos, targetPos);
 
-        // 선회율 제한 적용 → 실제 다음 Yaw (한 틱에 최대 TurnRate*dt 만큼만 회전)
-        double yawNext = CalcYawNext(model.Pose.Yaw, targetYaw, TurnRate, dt);
+        // 선회율 제한 적용 → 실제 다음 Yaw (한 틱에 최대 PoseTurnRate*dt 만큼만 회전)
+        double yawNext = CalcYawNext(model.Pose.Yaw, targetYaw, PoseTurnRate, dt);
 
         // 목표점 향한 고각
         double targetPitch = CalcPitchToTarget(model.Pos, targetPos);
@@ -126,10 +126,10 @@ public class WaypointMover
     /// 선회율 제한을 적용하여 다음 Yaw를 계산한다.
     /// 최단 회전 방향으로, 최대 turnRate * dt만큼 회전.
     /// </summary>
-    private static double CalcYawNext(double currentYaw, double targetYaw, double turnRate, double dt)
+    private static double CalcYawNext(double currentYaw, double targetYaw, double poseTurnRate, double dt)
     {
         double diff = NormalizeAngle(targetYaw - currentYaw);
-        double maxTurn = turnRate * dt;
+        double maxTurn = poseTurnRate * dt;
 
         if (Math.Abs(diff) <= maxTurn)
             return NormalizeYaw(targetYaw);

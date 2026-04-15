@@ -15,6 +15,8 @@ public class Airplane : TargetBase
         Type = MtAirplane;
         Name = $"Airplane-{id}";
         Power = 50.0;
+        _mover.PoseTurnRate = 20.0;
+        _mover.AltRate = 30.0;
     }
 
     /// <summary>
