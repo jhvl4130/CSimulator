@@ -15,7 +15,9 @@
       "Bash(cp \"D:/CSimulator/src/CIWSSim.App/input.json\" \"D:/CIWSSimulator/File/input.json\")",
       "Read(//d/CIWSSimulator/File/**)",
       "Bash(xargs grep:*)",
-      "Bash(python:*)"
+      "Bash(python:*)",
+      "Bash(wc -l /d/CIWSSimulator/File/*.csv)",
+      "Bash(grep -c ',1$' /d/CIWSSimulator/File/CIWS.csv)"
     ]
   }
 }

@@ -122,7 +122,7 @@ public class Gun : Model
         bool fireOccurred = false;
         if (_isFiring && onTarget && Ammo > 0 && (t - _lastFireTime) >= FireInterval)
         {
-            // FireBullet(t);
+            FireBullet(t);
             Ammo--;
             _totalFired++;
             _lastFireTime = t;
@@ -274,6 +274,7 @@ public class Gun : Model
 
         var bullet = new Bullet(bulletId)
         {
+            IniPos = Pos,   // Gun의 ENU 좌표 (탄환 생성 시 발사 원점)
             BulletPower = BulletPower,
             Fcs = Fcs
         };

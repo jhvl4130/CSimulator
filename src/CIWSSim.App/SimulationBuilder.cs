@@ -15,7 +15,8 @@ public class SimulationBuilder
     private const double DetectRange = 10000.0;
     private const double DetectPeriod = 1.0;
     private const double TrackPeriod = 0.04;
-    private const double FireRange = 1500.0;
+    private const double FireRange = 10000.0;
+    private const double SustainedFireKillSec = 3.0;
     private const double AssetRadius = 2000.0;
 
     /// <summary>
@@ -166,7 +167,7 @@ public class SimulationBuilder
         {
             var pos = new LLHPos(ciws.Position.Latitude, ciws.Position.Longitude, ciws.Position.Height);
             var (fcs, trackRadar, gun) = _engine.AddCIWS(ciwsBaseId, pos,
-                TrackPeriod, FireRange,
+                TrackPeriod, FireRange, SustainedFireKillSec,
                 4500, 1000, 10, 1000, 60,
                 _c2!);
             fcs.InputId = ciws.Id;

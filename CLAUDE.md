@@ -24,7 +24,7 @@ dotnet run --project src/CIWSSim.App -- custom.json # 커스텀 입력
 src/
 ├── CIWSSim.Core/        # 시뮬레이션 프레임워크 (Engine, Model, Events, Geometry, Util, Constants)
 ├── CIWSSim.Models/      # 구체 모델 (아래 모델 목록 참조)
-└── CIWSSim.App/         # 콘솔 앱 (Program.cs, SimulationBuilder.cs, InputConfig.cs, ScenarioConfig.cs)
+└── CIWSSim.App/         # 콘솔 앱 (Program.cs, SimulationBuilder.cs, InputConfig.cs)
 ```
 
 ## 교전 흐름
