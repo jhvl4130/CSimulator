@@ -16,6 +16,12 @@ public abstract class TargetBase : Model
     /// </summary>
     public TargetStatus Status { get; set; } = TargetStatus.Alive;
 
+    // 260415 최종 목표 지점 (ENU). 여기 지나치면 비행 종료.
+    public XYZPos Destination { get; set; }
+
+    // 260415 AssetZone 진입 1회 플래그 (이벤트 중복 송신 방지)
+    private bool _zoneBreached;
+
     protected TargetBase(int id) : base(id)
     {
         Class = ModelClass.Target;
@@ -43,10 +49,14 @@ public abstract class TargetBase : Model
     }
 
     /// <summary>
-    /// AssetZone 반구 진입 판정. 진입 시 true 반환 (IsEnabled=false 됨)
+    /// AssetZone 반구 진입 판정. 최초 진입 시 Status=Collided로 전환하고 C2에 Fail 통지.
+    /// 표적은 계속 비행한다 (목표 지점 도달 시 비로소 EndTarget).
     /// </summary>
-    protected bool CheckAssetZoneCollision(double t)
+    // 260415 진입 즉시 삭제 → 요격/할당 불가 상태로만 전환하도록 변경. CollideEvent 송신·EndTarget 제거.
+    protected void CheckAssetZoneCollision(double t)
     {
+        if (_zoneBreached) return;
+
         foreach (var asset in Engine!.GetModelsByClass(ModelClass.Asset))
         {
             if (!asset.IsEnabled) continue;
@@ -58,16 +68,40 @@ public abstract class TargetBase : Model
 
                 Status = TargetStatus.Collided;
                 IsStateChanged = true;
+                _zoneBreached = true;
 
                 if (zone.C2 is not null)
                 {
                     Engine.SendEvent(zone.C2, new FailEvent(this));
                 }
-
                 zone.HitCount++;
-                Engine.SendEvent(this, new CollideEvent(Power));
-                return true;
+                return;
             }
+        }
+    }
+
+    /// <summary>
+    /// 목표 지점(Destination) 통과 판정. 지나쳤으면 EndTarget 후 true.
+    /// </summary>
+    // 260415 표적이 목표지점 지나치면 자연 소멸
+    protected bool CheckDestinationReached(double t)
+    {
+        double yawRad = GeoUtil.DegToRad(Pose.Yaw);
+        double pitchRad = GeoUtil.DegToRad(Pose.Pitch);
+        double fx = Math.Sin(yawRad) * Math.Cos(pitchRad);
+        double fy = Math.Cos(yawRad) * Math.Cos(pitchRad);
+        double fz = Math.Sin(pitchRad);
+
+        double dx = Destination.X - Pos.X;
+        double dy = Destination.Y - Pos.Y;
+        double dz = Destination.Z - Pos.Z;
+
+        double dot = fx * dx + fy * dy + fz * dz;
+        if (dot <= 0.0)
+        {
+            Logger.Dbg(DbgFlag.Move, $"{t:F6} [{Name}] destination reached\n");
+            EndTarget();
+            return true;
         }
         return false;
     }

@@ -43,7 +43,9 @@ public class Rocket : TargetBase
             case PhaseType.Run:
                 tN = MovePeriod;
 
-                if (CheckAssetZoneCollision(t))
+                // 260415
+                CheckAssetZoneCollision(t);
+                if (CheckDestinationReached(t))
                 {
                     tN = TInfinite;
                 }

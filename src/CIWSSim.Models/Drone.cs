@@ -67,7 +67,9 @@ public class Drone : TargetBase
                     break;
                 }
 
-                if (CheckAssetZoneCollision(t))
+                // 260415 AssetZone 진입 = 상태 전환만, 목표 도달 시 소멸
+                CheckAssetZoneCollision(t);
+                if (CheckDestinationReached(t))
                 {
                     tN = TInfinite;
                     break;

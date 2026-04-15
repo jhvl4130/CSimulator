@@ -10,13 +10,13 @@ namespace CIWSSimulator.App;
 public class SimulationBuilder
 {
     // ── 상수 ──
-    private const double SimEndTime = 180.0;
+    private const double SimEndTime = 60.0;   // Test 시뮬레이션 시간 단축 (원복 시 180.0)
     private const double DefaultSpeed = 200.0;
     private const double DetectRange = 10000.0;
     private const double DetectPeriod = 1.0;
     private const double TrackPeriod = 0.04;
     private const double FireRange = 10000.0;
-    private const double SustainedFireKillSec = 3.0;
+    private const double SustainedFireKillSec = 3.0;   // Test 지속 사격 요격 임계시간 (복원 시 이 상수 및 사용처 제거)
     private const double AssetRadius = 500.0;
 
     /// <summary>
@@ -31,6 +31,8 @@ public class SimulationBuilder
     private StreamWriter? _targetCsvWriter;
     private StreamWriter? _ciwsCsvWriter;
     private readonly Dictionary<int, long> _lastLogIndex = new();
+    // 260415 Target의 직전 Status 기록. Status 전환은 버킷 중복 체크를 우회해 반드시 기록
+    private readonly Dictionary<int, int> _lastTargetStatus = new();
 
     public SimulationBuilder(string[] args)
     {
@@ -105,17 +107,24 @@ public class SimulationBuilder
             model.IsStateChanged = false;
 
             long logIndex = (long)Math.Round(time / OutputPeriod);
-            if (_lastLogIndex.TryGetValue(model.Id, out var last) && last == logIndex) return;
-            _lastLogIndex[model.Id] = logIndex;
+            bool sameBucket = _lastLogIndex.TryGetValue(model.Id, out var last) && last == logIndex;
 
             double gridTime = logIndex * OutputPeriod;
 
             if (model.Class == ModelClass.Target && model is TargetBase target)
             {
+                // 260415 Status 전환 시점은 반드시 기록 (Alive→Destroyed/Collided가 버킷 중복으로 누락되던 문제)
+                int curStatus = (int)target.Status;
+                bool statusChanged = !_lastTargetStatus.TryGetValue(model.Id, out var prev) || prev != curStatus;
+                if (sameBucket && !statusChanged) return;
+                _lastLogIndex[model.Id] = logIndex;
+                _lastTargetStatus[model.Id] = curStatus;
                 WriteTargetRow(gridTime, target);
             }
             else if (model.Type == MtGun && model is Gun gun)
             {
+                if (sameBucket) return;
+                _lastLogIndex[model.Id] = logIndex;
                 WriteCiwsRow(gridTime, gun);
             }
         };
@@ -161,8 +170,8 @@ public class SimulationBuilder
         {
             var pos = new LLHPos(ciws.Position.Latitude, ciws.Position.Longitude, ciws.Position.Height);
             var (fcs, trackRadar, gun) = _engine.AddCIWS(ciwsBaseId, pos,
-                TrackPeriod, FireRange, SustainedFireKillSec,
-                4500, 1000, 10, int.MaxValue, 60,   // 260415 Ammo 무한 (탄 부족 Fail 방지)
+                TrackPeriod, FireRange, SustainedFireKillSec,   // Test SustainedFireKillSec 인자 (복원 시 제거)
+                4500, 1000, 10, int.MaxValue, 60,               // Test Ammo 무한 (복원 시 1000 등 적정값)
                 _c2!);
             fcs.InputId = ciws.Id;
             trackRadar.InputId = ciws.Id;
@@ -173,6 +182,9 @@ public class SimulationBuilder
 
     private void RegisterTargets(List<RecordItem> targetItems)
     {
+        // 260415 모든 표적의 공통 목표 지점: 월드 origin lat/lon, 고도 95m (ENU z=95)
+        var destination = new XYZPos(0.0, 0.0, 95.0);
+
         int tgtBaseId = 1;
         foreach (var tgt in targetItems)
         {
@@ -182,6 +194,7 @@ public class SimulationBuilder
 
             var airplane = _engine.AddAirplane(tgtBaseId, pos, DefaultSpeed, azimuth, elevation, tgt.StartT);
             airplane.InputId = tgt.Id;
+            airplane.Destination = destination;
             tgtBaseId++;
         }
     }

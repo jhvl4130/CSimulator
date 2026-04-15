@@ -67,7 +67,9 @@ public class Missile : TargetBase
                     break;
                 }
 
-                if (CheckAssetZoneCollision(t))
+                // 260415
+                CheckAssetZoneCollision(t);
+                if (CheckDestinationReached(t))
                 {
                     tN = TInfinite;
                     break;

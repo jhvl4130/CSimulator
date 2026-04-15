@@ -102,6 +102,10 @@ public class C2Control : Model
         if (target is null || !target.IsEnabled)
             return TContinue;
 
+        // 260415 AssetZone 돌파한 표적은 요격/할당 불가
+        if (target is TargetBase tb && tb.Status == TargetStatus.Collided)
+            return TContinue;
+
         var fcs = TargetAlloc(t, ev.TargetId, target);
         if (fcs is null)
         {
@@ -152,7 +156,9 @@ public class C2Control : Model
 
             // 표적이 살아있으면 다른 CIWS에 재할당
             var target = Engine!.GetModel(ev.TargetId);
-            if (target is not null && target.IsEnabled
+            // 260415 Collided(AssetZone 돌파) 표적은 재할당 안 함
+            bool collided = target is TargetBase tb && tb.Status == TargetStatus.Collided;
+            if (target is not null && target.IsEnabled && !collided
                 && _latestTrackData.ContainsKey(ev.TargetId))
             {
                 var newFcs = TargetAlloc(t, ev.TargetId, target);

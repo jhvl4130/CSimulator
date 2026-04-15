@@ -41,6 +41,7 @@ public class FCS : Model
     /// <summary>
     /// 사격이 이 시간(초) 이상 연속 유지되면 요격 성공으로 판정
     /// </summary>
+    // Test 지속 사격 요격 판정 프로퍼티 (탄환-표적 충돌 방식으로 돌릴 때 제거)
     public double SustainedFireKillSec { get; set; } = 5.0;
 
     // ── 참조 (생성 시 주입) ──
@@ -66,7 +67,7 @@ public class FCS : Model
     private int _firedCount;
     private int _hitCount;
 
-    // ── 지속 사격 판정 ──
+    // Test ── 지속 사격 판정 ── (탄환-표적 충돌 방식 복원 시 제거)
     private double _firingStartT = -1.0;  // FireStatus.Firing이 시작된 시각. 끊기면 -1로 초기화
     private bool _killSent;                // AttackEvent 중복 송신 방지
 
@@ -235,8 +236,9 @@ public class FCS : Model
         _bulletRemain = ev.BulletRemain;
         _firedCount = ev.BulletFire;
 
-        // 260415 연속 사격 시간 추적. FireStatus.Firing이 SustainedFireKillSec 이상 유지되면
+        // Test 연속 사격 시간 추적. FireStatus.Firing이 SustainedFireKillSec 이상 유지되면
         // 표적에 Health 전량 피해 AttackEvent → TargetBase가 Destroyed → HandleDestroyed 경로 진입
+        // 탄환-표적 충돌 방식 복원 시 이 블록 전체 제거
         if (ev.FireStatus == FireStatus.Firing && Phase == PhaseType.FireOn)
         {
             if (_firingStartT < 0.0)
@@ -415,7 +417,7 @@ public class FCS : Model
         _hitCount = 0;
         _bulletFire = 0;
         _bulletRemain = 0;
-        // 260415 지속 사격 판정 상태도 초기화
+        // Test 지속 사격 판정 상태 초기화 (복원 시 이 두 줄 제거)
         _firingStartT = -1.0;
         _killSent = false;
     }

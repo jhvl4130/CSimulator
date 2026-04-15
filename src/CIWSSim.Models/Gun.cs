@@ -131,7 +131,7 @@ public class Gun : Model
         // 260415 fireOccurred(per-tick 발사) → firingNow(사격 상태) 기반으로 CSV 트리거 변경
         if (_isFiring && onTarget && Ammo > 0 && (t - _lastFireTime) >= FireInterval)
         {
-            // 260415 탄환 객체 생성 비활성화 (O(bullets × targets) 충돌 검사 성능 이슈) — CIWS.csv Fire/Tag 기록은 상태 기반이라 영향 없음
+            // Test 탄환 객체 생성 비활성화 (O(bullets × targets) 충돌 검사 성능 이슈) — CIWS.csv Fire/Tag 기록은 상태 기반이라 영향 없음
             // FireBullet(t);
             Ammo--;
             _totalFired++;

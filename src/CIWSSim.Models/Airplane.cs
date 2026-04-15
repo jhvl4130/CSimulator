@@ -77,7 +77,11 @@ public class Airplane : TargetBase
                     break;
                 }
 
-                if (CheckAssetZoneCollision(t))
+                // 260415 AssetZone 진입은 상태 전환만 (계속 비행)
+                CheckAssetZoneCollision(t);
+
+                // 260415 목표 지점 통과 시 소멸
+                if (CheckDestinationReached(t))
                 {
                     tN = TInfinite;
                     break;

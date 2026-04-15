@@ -140,7 +140,7 @@ public class Bullet : Model
                     Logger.Dbg(DbgFlag.Collide,
                         $"{t:F6} [{Name}] → [{target.Name}] Hit\n");
                     // AttackEvent로 Target에 피해 전달 (FCS 참조 포함)
-                    // 260415 요격 판정은 FCS의 지속 사격으로 대체. 충돌은 감지만 하고 피해량 0으로 전달
+                    // Test 요격 판정은 FCS의 지속 사격으로 대체. 충돌은 감지만 하고 피해량 0으로 전달
                     // Engine.SendEvent(target, new AttackEvent(BulletPower, Fcs));
                     Engine.SendEvent(target, new AttackEvent(0.0, Fcs));
                     EndBullet(true, target.Id);
