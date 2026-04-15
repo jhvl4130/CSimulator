@@ -16,7 +16,8 @@ public abstract class TargetBase : Model
     /// </summary>
     public TargetStatus Status { get; set; } = TargetStatus.Alive;
 
-    // 260415 최종 목표 지점 (ENU). 여기 지나치면 비행 종료.
+    // Test 최종 목표 지점 (ENU). 여기 지나치면 비행 종료.
+    // 정식 버전에서는 Waypoint의 마지막 점이 목표 역할을 하므로 이 프로퍼티와 CheckDestinationReached 제거
     public XYZPos Destination { get; set; }
 
     // 260415 AssetZone 진입 1회 플래그 (이벤트 중복 송신 방지)
@@ -83,7 +84,7 @@ public abstract class TargetBase : Model
     /// <summary>
     /// 목표 지점(Destination) 통과 판정. 지나쳤으면 EndTarget 후 true.
     /// </summary>
-    // 260415 표적이 목표지점 지나치면 자연 소멸
+    // Test 직선 기동 예시용. 정식은 Waypoint 마지막 점 도달 = _mover.IsFinished() 경로로 처리
     protected bool CheckDestinationReached(double t)
     {
         double yawRad = GeoUtil.DegToRad(Pose.Yaw);

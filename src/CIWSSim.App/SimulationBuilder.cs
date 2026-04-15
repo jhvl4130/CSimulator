@@ -182,7 +182,8 @@ public class SimulationBuilder
 
     private void RegisterTargets(List<RecordItem> targetItems)
     {
-        // 260415 모든 표적의 공통 목표 지점: 월드 origin lat/lon, 고도 95m (ENU z=95)
+        // Test 직선 기동 예시용 공통 목표 지점 (월드 origin lat/lon, 고도 95m → ENU z=95)
+        // 정식에서는 input의 Waypoint를 그대로 AddWaypoint로 연결하고 이 블록 제거
         var destination = new XYZPos(0.0, 0.0, 95.0);
 
         int tgtBaseId = 1;
@@ -194,7 +195,7 @@ public class SimulationBuilder
 
             var airplane = _engine.AddAirplane(tgtBaseId, pos, DefaultSpeed, azimuth, elevation, tgt.StartT);
             airplane.InputId = tgt.Id;
-            airplane.Destination = destination;
+            airplane.Destination = destination;   // Test (복원 시 제거)
             tgtBaseId++;
         }
     }

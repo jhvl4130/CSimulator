@@ -67,8 +67,9 @@ public class Drone : TargetBase
                     break;
                 }
 
-                // 260415 AssetZone 진입 = 상태 전환만, 목표 도달 시 소멸
+                // 260415 AssetZone 진입 = 상태 전환만
                 CheckAssetZoneCollision(t);
+                // Test 목표 지점 통과 시 소멸 (정식: waypoint 마지막 점 경로)
                 if (CheckDestinationReached(t))
                 {
                     tN = TInfinite;

@@ -80,7 +80,7 @@ public class Airplane : TargetBase
                 // 260415 AssetZone 진입은 상태 전환만 (계속 비행)
                 CheckAssetZoneCollision(t);
 
-                // 260415 목표 지점 통과 시 소멸
+                // Test 목표 지점 통과 시 소멸 (정식: waypoint 마지막 점 도달 경로로 대체)
                 if (CheckDestinationReached(t))
                 {
                     tN = TInfinite;
