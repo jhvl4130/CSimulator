@@ -6,7 +6,7 @@ namespace CIWSSimulator.Models;
 
 public static class EngineExtensions
 {
-    // ── Airplane ──
+    // Airplane
 
     public static Airplane AddAirplane(this Engine engine, int id,
         double x, double y, double z, double speed,
@@ -42,7 +42,7 @@ public static class EngineExtensions
             sizeX, sizeY, sizeZ);
     }
 
-    // ── Missile ──
+    // Missile
 
     public static void AddMissile(this Engine engine, int id,
         double x, double y, double z, double speed,
@@ -74,7 +74,7 @@ public static class EngineExtensions
             sizeX, sizeY, sizeZ);
     }
 
-    // ── Uav ──
+    // Uav
 
     public static void AddUav(this Engine engine, int id,
         double x, double y, double z, double speed,
@@ -106,7 +106,7 @@ public static class EngineExtensions
             sizeX, sizeY, sizeZ);
     }
 
-    // ── Drone ──
+    // Drone
 
     public static void AddDrone(this Engine engine, int id,
         double x, double y, double z, double speed,
@@ -138,7 +138,7 @@ public static class EngineExtensions
             sizeX, sizeY, sizeZ);
     }
 
-    // ── Waypoint ──
+    // Waypoint
 
     /// <summary>
     /// LLH 좌표로 웨이포인트 추가
@@ -156,7 +156,7 @@ public static class EngineExtensions
         model.AddWaypoint(new XYZWayp(enu.X, enu.Y, enu.Z, speed));
     }
 
-    // ── AssetZone (반구 영역) ──
+    // AssetZone (반구 영역)
 
     /// <summary>
     /// ENU 좌표로 반구 방어 영역 추가. center가 반구 바닥 중심, radius가 반경.
@@ -182,7 +182,7 @@ public static class EngineExtensions
         engine.AddAssetZone(id, enu.X, enu.Y, enu.Z, radius);
     }
 
-    // ── Launcher ──
+    // Launcher
 
     public static void AddLauncher(this Engine engine, int id,
         double x, double y, double z, double speed,
@@ -211,7 +211,7 @@ public static class EngineExtensions
             azimuth, elevation, startT);
     }
 
-    // ── SearchRadar ──
+    // SearchRadar
 
     public static SearchRadar AddSearchRadar(this Engine engine, int id,
         LLHPos posLlh, double detectRange, double detectPeriod)
@@ -227,7 +227,7 @@ public static class EngineExtensions
         return model;
     }
 
-    // ── C2Control ──
+    // C2Control
 
     public static C2Control AddC2Control(this Engine engine, int id,
         string? eventLogPath = "event_log.csv")
@@ -240,7 +240,7 @@ public static class EngineExtensions
         return model;
     }
 
-    // ── CIWS 세트 (FCS + TrackRadar + EOTS + Gun) ──
+    // CIWS 세트 (FCS + TrackRadar + EOTS + Gun)
 
     /// <summary>
     /// CIWS 1세트를 생성하고 상호 참조를 연결한다.
@@ -307,7 +307,7 @@ public static class EngineExtensions
         return (fcs, trackRadar, gun);
     }
 
-    // ── AssetZone (C2 참조 포함) ──
+    // AssetZone (C2 참조 포함)
 
     /// <summary>
     /// LLH 좌표로 반구 방어 영역 추가 (C2 참조 포함)

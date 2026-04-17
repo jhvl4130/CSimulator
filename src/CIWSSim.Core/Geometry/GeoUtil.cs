@@ -10,12 +10,12 @@ public static class GeoUtil
     private const double SemiMinor = SemiMajor * (1.0 - Flattening);
     private const double E2 = 1.0 - (SemiMinor * SemiMinor) / (SemiMajor * SemiMajor);
 
-    // ── 단위 변환 ──
+    // 단위 변환
 
     public static double DegToRad(double deg) => deg * (Math.PI / 180.0);
     public static double RadToDeg(double rad) => rad * (180.0 / Math.PI);
 
-    // ── 거리 / 방위각 ──
+    // 거리 / 방위각
 
     /// <summary>
     /// 두 ENU 좌표 사이의 3D 유클리드 거리 (m)
@@ -51,7 +51,7 @@ public static class GeoUtil
         return (deg + 360.0) % 360.0;
     }
 
-    // ── 위치 계산 ──
+    // 위치 계산
 
     /// <summary>
     /// 현재 위치에서 방위각/고각 방향으로 거리만큼 이동한 다음 위치를 반환.
@@ -147,7 +147,7 @@ public static class GeoUtil
         return new Pose(azimuth, elevation, 0.0);
     }
 
-    // ── NED ↔ ENU 변환 ──
+    // NED ↔ ENU 변환
 
     /// <summary>
     /// NED → ENU 변환. (N,E,D) → (E,N,-D)
@@ -165,7 +165,7 @@ public static class GeoUtil
         return new XYZPos(enu.Y, enu.X, -enu.Z);
     }
 
-    // ── 좌표 변환 ──
+    // 좌표 변환
 
     /// <summary>
     /// LLA(도 단위) → ENU 변환. origin은 ENU 원점의 LLA 좌표.
@@ -219,7 +219,7 @@ public static class GeoUtil
             originEcef.Z + dz));
     }
 
-    // ── 내부 변환 (ECEF) ──
+    // 내부 변환 (ECEF)
 
     private static XYZPos LlaToEcef(LLHPos lla)
     {

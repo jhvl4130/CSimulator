@@ -44,26 +44,26 @@ public class FCS : Model
     // Test 지속 사격 요격 판정 프로퍼티 (탄환-표적 충돌 방식으로 돌릴 때 제거)
     public double SustainedFireKillSec { get; set; } = 5.0;
 
-    // ── 참조 (생성 시 주입) ──
+    // 참조 (생성 시 주입)
     public Model? TrackRadar { get; set; }
     public Model? GunModel { get; set; }
     public Model? C2 { get; set; }
 
-    // ── 교전 대상 ──
+    // 교전 대상
     private Model? _target;
 
-    // ── 최신 추적 데이터 ──
+    // 최신 추적 데이터
     private XYZPos _trackPos;
     private XYZPos _trackVel;
     private double _aimAzimuth;
     private double _aimElevation;
     private double _trackDist;
 
-    // ── Gun 피드백 (DriveResult) ──
+    // Gun 피드백 (DriveResult)
     private int _bulletFire;
     private int _bulletRemain;
 
-    // ── 교전 통계 (PHP 계산용) ──
+    // 교전 통계 (PHP 계산용)
     private int _firedCount;
     private int _hitCount;
 
@@ -134,7 +134,7 @@ public class FCS : Model
         return TContinue;
     }
 
-    // ── input: TargetDesignation (C2 → FCS) ──
+    // input: TargetDesignation (C2 → FCS)
 
     private double HandleTargetDesignation(double t, TargetDesignationEvent ev)
     {
@@ -173,7 +173,7 @@ public class FCS : Model
         return TContinue;
     }
 
-    // ── input: TrackInfo (TrackRadar → FCS) ──
+    // input: TrackInfo (TrackRadar → FCS)
 
     private double HandleTrackInfo(double t, TrackInfoEvent ev)
     {
@@ -226,7 +226,7 @@ public class FCS : Model
         return TContinue;
     }
 
-    // ── input: DriveResult (Gun → FCS, 200Hz) ──
+    // input: DriveResult (Gun → FCS, 200Hz)
 
     private double HandleDriveResult(double t, DriveResultEvent ev)
     {
@@ -267,7 +267,7 @@ public class FCS : Model
         return TContinue;
     }
 
-    // ── input: BulletImpact (Gun → FCS) ──
+    // input: BulletImpact (Gun → FCS)
 
     private double HandleBulletImpact(double t, BulletImpactEvent ev)
     {
@@ -275,7 +275,7 @@ public class FCS : Model
         return TContinue;
     }
 
-    // ── input: Destroyed (Target → FCS) ──
+    // input: Destroyed (Target → FCS)
 
     private double HandleDestroyed(double t, DestroyedEvent ev)
     {
@@ -291,7 +291,7 @@ public class FCS : Model
         return TInfinite;
     }
 
-    // ── input: FailEvent (AssetZone → C2 → FCS) ──
+    // input: FailEvent (AssetZone → C2 → FCS)
 
     private double HandleFail(double t, FailEvent ev)
     {
@@ -305,7 +305,7 @@ public class FCS : Model
         return TInfinite;
     }
 
-    // ── input: TrackLost (TrackRadar → FCS) ──
+    // input: TrackLost (TrackRadar → FCS)
 
     private double HandleTrackLost(double t, TrackLostEvent ev)
     {
@@ -320,7 +320,7 @@ public class FCS : Model
         return TInfinite;
     }
 
-    // ── input: CollideEvent (표적 → FCS 피격) ──
+    // input: CollideEvent (표적 → FCS 피격)
 
     private double HandleCollide(double t, CollideEvent ev)
     {
@@ -342,7 +342,7 @@ public class FCS : Model
         return TContinue;
     }
 
-    // ── 함수 ──
+    // 함수
 
     /// <summary>
     /// PHP 계산 (PhpErr 반영)
@@ -364,7 +364,7 @@ public class FCS : Model
             $"{t:F6} [{Name}] DamageEval: fired={_firedCount}, hit={_hitCount}, PHP={php:F4}\n");
     }
 
-    // ── 교전 종료 + 보고 ──
+    // 교전 종료 + 보고
 
     private void EndEngagement(double t, EngagementStatus status)
     {

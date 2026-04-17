@@ -13,7 +13,7 @@ public static class FileIO
         AllowTrailingCommas = true
     };
 
-    // ── JSON ──
+    // JSON
 
     public static T? LoadJson<T>(string path)
     {
@@ -27,7 +27,7 @@ public static class FileIO
         File.WriteAllText(path, json, Encoding.UTF8);
     }
 
-    // ── CSV ──
+    // CSV
 
     /// <summary>
     /// CSV 파일을 읽어 각 행을 문자열 배열로 반환한다.

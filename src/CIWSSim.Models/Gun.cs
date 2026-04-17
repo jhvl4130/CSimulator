@@ -292,7 +292,7 @@ public class Gun : Model
         return val < min ? min : (val > max ? max : val);
     }
 
-    // ── 탄환 관리 ──
+    // 탄환 관리
 
     private void FireBullet(double t)
     {

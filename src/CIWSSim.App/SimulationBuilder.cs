@@ -9,7 +9,7 @@ namespace CIWSSimulator.App;
 
 public class SimulationBuilder
 {
-    // ── 상수 ──
+    // 상수
     private const double SimEndTime = 60.0;   // Test 시뮬레이션 시간 단축 (원복 시 180.0)
     private const double DefaultSpeed = 100.0;
     private const double DetectRange = 10000.0;

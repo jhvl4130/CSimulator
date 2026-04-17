@@ -49,7 +49,7 @@ public class WaypointMover
         var target = model.Waypoints[_waypointIndex];
         var targetPos = new XYZPos(target.X, target.Y, target.Z);
 
-        // ── 1. 방향 계산 ──
+        // 1. 방향 계산
 
         // 현재 위치 → 목표 웨이포인트 방위각
         double targetYaw = GeoUtil.Bearing(model.Pos, targetPos);
@@ -63,18 +63,18 @@ public class WaypointMover
         // pitch 변화율 제한 적용 (AltRate → 각속도로 변환: altRate / speed = rad/s 근사)
         double pitchNext = CalcPitchNext(model.Pose.Pitch, targetPitch, AltRate, model.Speed, dt);
 
-        // ── 2. 위치 이동 (Yaw + Pitch 반영) ──
+        // 2. 위치 이동 (Yaw + Pitch 반영)
         // Speed * dt 중 cos(pitch)는 수평, sin(pitch)는 수직 성분
 
         double moveDist = model.Speed * dt;
         var nextPos = GeoUtil.NextPosition(model.Pos, yawNext, pitchNext, moveDist);
 
-        // ── 3. 자세 업데이트 ──
+        // 3. 자세 업데이트
 
         model.Pose = new Pose(yawNext, pitchNext, 0.0);
         model.Pos = nextPos;
 
-        // ── 4. Fly-Over 통과 판정 ──
+        // 4. Fly-Over 통과 판정
         // 이전 위치 → 웨이포인트 벡터와 현재 위치 → 웨이포인트 벡터의
         // 관계를 내적으로 판정. 웨이포인트를 지나쳤으면(내적 ≤ 0) 통과로 간주.
         bool passed = HasPassedWaypoint(model.Pos, targetPos, yawNext);
@@ -120,7 +120,7 @@ public class WaypointMover
         model.Pos = GeoUtil.NextPosition(model.Pos, model.Pose.Yaw, model.Pose.Pitch, model.Speed * dt);
     }
 
-    // ── 보조 계산 ──
+    // 보조 계산
 
     /// <summary>
     /// 선회율 제한을 적용하여 다음 Yaw를 계산한다.
