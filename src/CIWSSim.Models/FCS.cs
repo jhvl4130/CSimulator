@@ -215,9 +215,7 @@ public class FCS : Model
 
                 if (GunModel is not null)
                 {
-                    // 260415 Gun이 CIWS.csv에 사격 대상 InputId와 Tag를 기록할 수 있도록 전달
-                    // Engine!.SendEvent(GunModel, new FireEvent(FireCmd.On));
-                    Engine!.SendEvent(GunModel, new FireEvent(FireCmd.On, _target.InputId, _target.Tag));
+                    Engine!.SendEvent(GunModel, new FireEvent(FireCmd.On, _target.InputId, _target.Type));
                 }
 
                 // C2에 사격 시작 보고

@@ -31,8 +31,8 @@ public class SimulationBuilder
     private StreamWriter? _targetCsvWriter;
     private StreamWriter? _ciwsCsvWriter;
     private readonly Dictionary<int, long> _lastLogIndex = new();
-    // 260415 Target의 직전 Status 기록. Status 전환은 버킷 중복 체크를 우회해 반드시 기록
     private readonly Dictionary<int, int> _lastTargetStatus = new();
+    private readonly Dictionary<int, int> _lastGunFire = new();
 
     public SimulationBuilder(string[] args)
     {
@@ -98,8 +98,7 @@ public class SimulationBuilder
         _targetCsvWriter.WriteLine("Time,ID,Type,Status,Lat,Lon,Alt,Roll,Pitch,Yaw");
 
         _ciwsCsvWriter = new StreamWriter(Path.Combine(FileDir, "CIWS.csv"), false, Encoding.UTF8);
-        // 260415 Fire 옆에 Tag 컬럼 추가 (사격 대상 Tag, 0이면 빈 문자열)
-        _ciwsCsvWriter.WriteLine("Time,ID,Pitch,Yaw,Fire,Tag");
+        _ciwsCsvWriter.WriteLine("Time,ID,Pitch,Yaw,Fire,Type");
 
         _engine.OnModelTransitioned = (time, model) =>
         {
@@ -123,8 +122,11 @@ public class SimulationBuilder
             }
             else if (model.Type == MtGun && model is Gun gun)
             {
-                if (sameBucket) return;
+                bool fireChanged = !_lastGunFire.TryGetValue(model.Id, out var prevFire)
+                                   || prevFire != gun.LastFireTargetId;
+                if (sameBucket && !fireChanged) return;
                 _lastLogIndex[model.Id] = logIndex;
+                _lastGunFire[model.Id] = gun.LastFireTargetId;
                 WriteCiwsRow(gridTime, gun);
             }
         };
@@ -156,10 +158,8 @@ public class SimulationBuilder
             gun.InputId.ToString(),
             gun.Pose.Pitch.ToString("F4"),
             gun.Pose.Yaw.ToString("F4"),
-            // 260415 0/1 → 0 또는 사격 대상 InputId
-            // gun.LastFireFlag ? "1" : "0",
             gun.LastFireTargetId.ToString(),
-            gun.LastFireTargetTag,
+            gun.LastFireTargetType.ToString(),
         }));
     }
 

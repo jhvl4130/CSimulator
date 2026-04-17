@@ -71,17 +71,14 @@ public class Gun : Model
     private bool _isFiring;
     private double _lastFireTime;
     private int _totalFired;
-    private int _currentTargetId;          // 260415 현재 사격 대상 InputId
-    private string _currentTargetTag = ""; // 260415 현재 사격 대상 Tag
+    private int _currentTargetId;
+    private int _currentTargetType;
 
     /// <summary>
     /// 현재 틱의 발사 여부(0/1) CIWS.csv 콜백에서 읽음
     /// </summary>
-    // 260415 0/1 대신 0 또는 사격 대상 InputId 기록으로 변경
-    // public bool LastFireFlag { get; private set; }
     public int LastFireTargetId { get; private set; }
-    // 260415 사격 중이면 대상 Tag, 아니면 빈 문자열
-    public string LastFireTargetTag { get; private set; } = "";
+    public int LastFireTargetType { get; private set; }
 
     /// <summary>
     /// 발사 간격 (초)
@@ -129,9 +126,9 @@ public class Gun : Model
         _isFiring = false;
         _totalFired = 0;
         _currentTargetId = 0;
-        _currentTargetTag = "";
+        _currentTargetType = 0;
         LastFireTargetId = 0;
-        LastFireTargetTag = "";
+        LastFireTargetType = 0;
         _bullets.Clear();
         return TInfinite;
     }
@@ -180,13 +177,11 @@ public class Gun : Model
         _prevElevation = _curElevation;
 
         // CIWS.csv 출력 트리거: 자세 변화 또는 사격 중
-        // 260415 사격 중이면 매 틱 state change 발생 → 다운샘플링으로 10Hz 출력에 타겟ID/Tag 노출
         bool firingNow = _isFiring && onTarget && Ammo > 0;
         if (poseChanged || firingNow)
         {
-            // LastFireFlag = fireOccurred;
             LastFireTargetId = firingNow ? _currentTargetId : 0;
-            LastFireTargetTag = firingNow ? _currentTargetTag : "";
+            LastFireTargetType = firingNow ? _currentTargetType : 0;
             IsStateChanged = true;
         }
 
@@ -217,9 +212,10 @@ public class Gun : Model
                 return TContinue;
 
             case FireEvent fire:
+                bool wasFiring = _isFiring;
                 _isFiring = (fire.Cmd == FireCmd.On);
-                _currentTargetId = _isFiring ? fire.TargetId : 0;      // 260415
-                _currentTargetTag = _isFiring ? fire.TargetTag : "";   // 260415
+                _currentTargetId = _isFiring ? fire.TargetId : 0;
+                _currentTargetType = _isFiring ? fire.TargetType : 0;
                 if (_isFiring)
                 {
                     _lastFireTime = t - FireInterval; // 즉시 발사 가능
@@ -228,6 +224,13 @@ public class Gun : Model
                         Phase = PhaseType.Run;
                         return DrivePeriod;
                     }
+                }
+                else if (wasFiring)
+                {
+                    // 교전 종료 → 마지막 Fire=0 행 출력 보장
+                    LastFireTargetId = 0;
+                    LastFireTargetType = 0;
+                    IsStateChanged = true;
                 }
                 Logger.Dbg(DbgFlag.Init,
                     $"{t:F6} [{Name}] Fire {fire.Cmd}\n");
