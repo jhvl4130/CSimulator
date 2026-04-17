@@ -112,8 +112,8 @@ public class FCS : Model
             case DriveResultEvent driveResult:
                 return HandleDriveResult(t, driveResult);
 
-            case BulletPositionEvent bulletPos:
-                return HandleBulletPosition(t, bulletPos);
+            case BulletImpactEvent impact:
+                return HandleBulletImpact(t, impact);
 
             case DestroyedEvent destroyed:
                 return HandleDestroyed(t, destroyed);
@@ -269,11 +269,11 @@ public class FCS : Model
         return TContinue;
     }
 
-    // ── input: BulletPosition (Bullet → FCS) ──
+    // ── input: BulletImpact (Gun → FCS) ──
 
-    private double HandleBulletPosition(double t, BulletPositionEvent ev)
+    private double HandleBulletImpact(double t, BulletImpactEvent ev)
     {
-        // 탄 위치 추적 (향후 DamageEval에 활용)
+        if (ev.IsHit) _hitCount++;
         return TContinue;
     }
 

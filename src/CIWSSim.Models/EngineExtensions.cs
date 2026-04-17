@@ -199,19 +199,6 @@ public static class EngineExtensions
         engine.RegisterModel(model);
     }
 
-    // ── Bullet ──
-
-    /// <summary>
-    /// 궤적 리스트로 Bullet 추가. 시뮬레이션 중 런타임 등록.
-    /// </summary>
-    public static void AddBullet(this Engine engine, int id,
-        List<BallisticState> trajectory, double power = 10.0)
-    {
-        var model = new Bullet(id) { BulletPower = power, Tag = "CombatPlatform.Bullet" };
-        model.SetTrajectory(trajectory);
-        engine.AddRuntimeModel(model);
-    }
-
     /// <summary>
     /// LLH 좌표로 Launcher 추가
     /// </summary>
