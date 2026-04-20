@@ -81,6 +81,11 @@ public class Gun : Model
     public int LastFireTargetType { get; private set; }
 
     /// <summary>
+    /// 누적 발사 탄수. CIWS.csv 콜백에서 읽음
+    /// </summary>
+    public int TotalFired => _totalFired;
+
+    /// <summary>
     /// 발사 간격 (초)
     /// </summary>
     private double FireInterval => 60.0 / Rpm;

@@ -16,7 +16,6 @@ public class SimulationBuilder
     private const double DetectPeriod = 1.0;
     private const double TrackPeriod = 0.04;
     private const double FireRange = 10000.0;
-    private const double SustainedFireKillSec = 3.0;   // Test 지속 사격 요격 임계시간 (복원 시 이 상수 및 사용처 제거)
     private const double AssetRadius = 500.0;
 
     /// <summary>
@@ -98,7 +97,7 @@ public class SimulationBuilder
         _targetCsvWriter.WriteLine("Time,ID,Type,Status,Lat,Lon,Alt,Roll,Pitch,Yaw");
 
         _ciwsCsvWriter = new StreamWriter(Path.Combine(FileDir, "CIWS.csv"), false, Encoding.UTF8);
-        _ciwsCsvWriter.WriteLine("Time,ID,Pitch,Yaw,Fire,Type");
+        _ciwsCsvWriter.WriteLine("Time,ID,Pitch,Yaw,Fire,Type,FireCount");
 
         _engine.OnModelTransitioned = (time, model) =>
         {
@@ -160,6 +159,7 @@ public class SimulationBuilder
             gun.Pose.Yaw.ToString("F4"),
             gun.LastFireTargetId.ToString(),
             gun.LastFireTargetType.ToString(),
+            gun.TotalFired.ToString(),
         }));
     }
 
@@ -170,7 +170,7 @@ public class SimulationBuilder
         {
             var pos = new LLHPos(ciws.Position.Latitude, ciws.Position.Longitude, ciws.Position.Height);
             var (fcs, trackRadar, gun) = _engine.AddCIWS(ciwsBaseId, pos,
-                TrackPeriod, FireRange, SustainedFireKillSec,   // Test SustainedFireKillSec 인자 (복원 시 제거)
+                TrackPeriod, FireRange,
                 4500, 1000, 10, int.MaxValue, 60,               // Test Ammo 무한 (복원 시 1000 등 적정값)
                 _c2!);
             fcs.InputId = ciws.Id;

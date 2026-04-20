@@ -249,7 +249,7 @@ public static class EngineExtensions
     public static (FCS fcs, TrackRadar trackRadar, Gun gun) AddCIWS(
         this Engine engine, int ciwsId, LLHPos posLlh,
         double trackPeriod,
-        double fireRange, double sustainedFireKillSec,   // Test sustainedFireKillSec 파라미터 (복원 시 제거)
+        double fireRange,
         double rpm, double bulletSpeed, double bulletPower,
         int ammo, double poseTurnRate,
         C2Control c2)
@@ -265,7 +265,6 @@ public static class EngineExtensions
         {
             IniPos = enu,
             FireRange = fireRange,
-            SustainedFireKillSec = sustainedFireKillSec,   // Test 복원 시 제거
             CiwsId = ciwsId,
             TrackPeriod = trackPeriod
         };

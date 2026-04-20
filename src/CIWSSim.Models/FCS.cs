@@ -38,12 +38,6 @@ public class FCS : Model
     /// </summary>
     public double EngagementReportPeriod { get; set; } = 1.0;
 
-    /// <summary>
-    /// 사격이 이 시간(초) 이상 연속 유지되면 요격 성공으로 판정
-    /// </summary>
-    // Test 지속 사격 요격 판정 프로퍼티 (탄환-표적 충돌 방식으로 돌릴 때 제거)
-    public double SustainedFireKillSec { get; set; } = 5.0;
-
     // 참조 (생성 시 주입)
     public Model? TrackRadar { get; set; }
     public Model? GunModel { get; set; }
@@ -66,10 +60,6 @@ public class FCS : Model
     // 교전 통계 (PHP 계산용)
     private int _firedCount;
     private int _hitCount;
-
-    // Test ── 지속 사격 판정 ── (탄환-표적 충돌 방식 복원 시 제거)
-    private double _firingStartT = -1.0;  // FireStatus.Firing이 시작된 시각. 끊기면 -1로 초기화
-    private bool _killSent;                // AttackEvent 중복 송신 방지
 
     public FCS(int id) : base(id)
     {
@@ -234,30 +224,6 @@ public class FCS : Model
         _bulletRemain = ev.BulletRemain;
         _firedCount = ev.BulletFire;
 
-        // Test 연속 사격 시간 추적. FireStatus.Firing이 SustainedFireKillSec 이상 유지되면
-        // 표적에 Health 전량 피해 AttackEvent → TargetBase가 Destroyed → HandleDestroyed 경로 진입
-        // 탄환-표적 충돌 방식 복원 시 이 블록 전체 제거
-        if (ev.FireStatus == FireStatus.Firing && Phase == PhaseType.FireOn)
-        {
-            if (_firingStartT < 0.0)
-            {
-                _firingStartT = t;
-            }
-            else if (!_killSent && (t - _firingStartT) >= SustainedFireKillSec
-                     && _target is not null && _target.IsEnabled)
-            {
-                _killSent = true;
-                Logger.Dbg(DbgFlag.Collide,
-                    $"{t:F6} [{Name}] Sustained fire {SustainedFireKillSec:F1}s → kill [{_target.Name}]\n");
-                Engine!.SendEvent(_target, new AttackEvent(_target.Health, this));
-            }
-        }
-        else
-        {
-            // 사격 끊기면 카운터 리셋 (연속 유지만 인정)
-            _firingStartT = -1.0;
-        }
-
         if (ev.BulletRemain <= 0 && Phase == PhaseType.FireOn)
         {
             Logger.Dbg(DbgFlag.Collide, $"{t:F6} [{Name}] Gun ammo depleted\n");
@@ -415,8 +381,5 @@ public class FCS : Model
         _hitCount = 0;
         _bulletFire = 0;
         _bulletRemain = 0;
-        // Test 지속 사격 판정 상태 초기화 (복원 시 이 두 줄 제거)
-        _firingStartT = -1.0;
-        _killSent = false;
     }
 }
