@@ -29,6 +29,7 @@ public class SimulationBuilder
     private C2Control? _c2;
     private StreamWriter? _targetCsvWriter;
     private StreamWriter? _ciwsCsvWriter;
+    private StreamWriter? _statusCsvWriter;
     private readonly Dictionary<int, long> _lastLogIndex = new();
     private readonly Dictionary<int, int> _lastTargetStatus = new();
     private readonly Dictionary<int, int> _lastGunFire = new();
@@ -57,6 +58,7 @@ public class SimulationBuilder
         _c2?.Dispose();
         _targetCsvWriter?.Dispose();
         _ciwsCsvWriter?.Dispose();
+        _statusCsvWriter?.Dispose();
     }
 
     private void Build()
@@ -71,6 +73,7 @@ public class SimulationBuilder
         SetupCsvOutput();
 
         _c2 = _engine.AddC2Control(500, Path.Combine(FileDir, "event_log.csv"));
+        _c2.OnStatsChanged = WriteStatusRow;
 
         RegisterCiws(ciwsItems);
 
@@ -81,6 +84,8 @@ public class SimulationBuilder
         _engine.AddAssetZone(900, siteCenter, AssetRadius, _c2);
 
         RegisterTargets(targetItems);
+        _c2.TotalTargets = targetItems.Count;
+        WriteStatusRow(0.0);
     }
 
     private LLHPos ResolveOrigin(List<RecordItem> ciwsItems)
@@ -98,6 +103,9 @@ public class SimulationBuilder
 
         _ciwsCsvWriter = new StreamWriter(Path.Combine(FileDir, "CIWS.csv"), false, Encoding.UTF8);
         _ciwsCsvWriter.WriteLine("Time,ID,Pitch,Yaw,Fire,Type,FireCount");
+
+        _statusCsvWriter = new StreamWriter(Path.Combine(FileDir, "Status.csv"), false, Encoding.UTF8);
+        _statusCsvWriter.WriteLine("Time,TotalTargets,Detected,InterceptSuccess,InterceptFail");
 
         _engine.OnModelTransitioned = (time, model) =>
         {
@@ -147,6 +155,20 @@ public class SimulationBuilder
             target.Pose.Pitch.ToString("F4"),
             target.Pose.Yaw.ToString("F4"),
         }));
+    }
+
+    private void WriteStatusRow(double time)
+    {
+        if (_statusCsvWriter is null || _c2 is null) return;
+        _statusCsvWriter.WriteLine(string.Join(',', new[]
+        {
+            time.ToString("F4"),
+            _c2.TotalTargets.ToString(),
+            _c2.DetectedCount.ToString(),
+            _c2.InterceptSuccess.ToString(),
+            _c2.InterceptFail.ToString(),
+        }));
+        _statusCsvWriter.Flush();
     }
 
     private void WriteCiwsRow(double time, Gun gun)

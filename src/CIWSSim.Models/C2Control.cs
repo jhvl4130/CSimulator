@@ -29,6 +29,11 @@ public class C2Control : Model
     private readonly Dictionary<int, TrackInfoEvent> _latestTrackData = new();
 
     /// <summary>
+    /// 지금까지 한 번이라도 탐지된 표적 ID 집합 (누적 고유 탐지 수 계산용)
+    /// </summary>
+    private readonly HashSet<int> _everDetected = new();
+
+    /// <summary>
     /// 이벤트 로그 StreamWriter
     /// </summary>
     private StreamWriter? _logWriter;
@@ -37,6 +42,31 @@ public class C2Control : Model
     /// 이벤트 로그 출력 경로
     /// </summary>
     public string? EventLogPath { get; set; } = "event_log.csv";
+
+    /// <summary>
+    /// 시나리오 전체 표적 수 (등록 시점에 SimulationBuilder가 설정)
+    /// </summary>
+    public int TotalTargets { get; set; }
+
+    /// <summary>
+    /// 누적 고유 탐지 표적 수 (한 번 탐지되면 감소하지 않음)
+    /// </summary>
+    public int DetectedCount { get; private set; }
+
+    /// <summary>
+    /// 누적 요격 성공 수
+    /// </summary>
+    public int InterceptSuccess { get; private set; }
+
+    /// <summary>
+    /// 누적 요격 실패 수 (AssetZone 돌파)
+    /// </summary>
+    public int InterceptFail { get; private set; }
+
+    /// <summary>
+    /// 집계값 변동 시점에 호출되는 콜백 (비주기 Status.csv용)
+    /// </summary>
+    public Action<double>? OnStatsChanged { get; set; }
 
     public C2Control(int id) : base(id)
     {
@@ -92,6 +122,11 @@ public class C2Control : Model
     {
         // 최신 추적 데이터 갱신
         _latestTrackData[ev.TargetId] = ev;
+        if (_everDetected.Add(ev.TargetId))
+        {
+            DetectedCount++;
+            OnStatsChanged?.Invoke(t);
+        }
 
         // 이미 할당된 표적이면 추적 데이터만 갱신
         if (_targetFcsMap.ContainsKey(ev.TargetId))
@@ -147,6 +182,8 @@ public class C2Control : Model
                 $"fired={ev.BulletFire} remain={ev.BulletRemain}");
             _targetFcsMap.Remove(ev.TargetId);
             _latestTrackData.Remove(ev.TargetId);
+            InterceptSuccess++;
+            OnStatsChanged?.Invoke(t);
         }
         else if (ev.Status == EngagementStatus.Fail)
         {
@@ -210,6 +247,9 @@ public class C2Control : Model
             Engine!.SendEvent(fcs, ev);
             _targetFcsMap.Remove(target.Id);
         }
+
+        InterceptFail++;
+        OnStatsChanged?.Invoke(t);
 
         return TContinue;
     }
