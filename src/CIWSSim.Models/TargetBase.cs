@@ -112,20 +112,17 @@ public abstract class TargetBase : Model
     /// </summary>
     protected void HandleAttack(double t, AttackEvent attack)
     {
-        Health -= attack.Power;
-        Logger.Dbg(DbgFlag.Collide,
-            $"{t:F6} [{Name}] Attacked, health={Health:F1}\n");
-        if (Health <= 0.0)
-        {
-            Status = TargetStatus.Destroyed;
-            IsStateChanged = true;
+        // 260420 단발 격추 정책: 탄환 1발이라도 명중하면 파괴
+        Health = 0.0;
+        Status = TargetStatus.Destroyed;
+        IsStateChanged = true;
+        Logger.Dbg(DbgFlag.Collide, $"{t:F6} [{Name}] Destroyed by hit\n");
 
-            if (attack.SourceFcs is not null)
-            {
-                Engine!.SendEvent(attack.SourceFcs, new DestroyedEvent(Id));
-            }
-            EndTarget();
+        if (attack.SourceFcs is not null)
+        {
+            Engine!.SendEvent(attack.SourceFcs, new DestroyedEvent(Id));
         }
+        EndTarget();
     }
 
     /// <summary>

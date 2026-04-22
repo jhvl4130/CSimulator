@@ -19,6 +19,11 @@ public class FCS : Model
     public double FireRange { get; set; } = 1500.0;
 
     /// <summary>
+    /// 260421 리드 계산용 탄속 (m/s). Gun.BulletSpeed와 동일하게 유지.
+    /// </summary>
+    public double BulletSpeed { get; set; } = 800.0;
+
+    /// <summary>
     /// 소속 CIWS ID
     /// </summary>
     public int CiwsId { get; set; }
@@ -177,11 +182,38 @@ public class FCS : Model
         if (_target is null || !_target.IsEnabled)
             return TContinue;
 
-        // 방위각/고각/거리 계산
-        _aimAzimuth = GeoUtil.Bearing(Pos, _trackPos);
-        double dx = _trackPos.X - Pos.X;
-        double dy = _trackPos.Y - Pos.Y;
-        double dz = _trackPos.Z - Pos.Z;
+        // 260421 선도각(Lead) 계산 — closed-form 2차방정식
+        // r = trackPos - Pos, v = trackVel, s = BulletSpeed
+        // (v·v - s²)t² + 2(r·v)t + (r·r) = 0 → a<0이라 양의 실근 1개 보장
+        double rx = _trackPos.X - Pos.X;
+        double ry = _trackPos.Y - Pos.Y;
+        double rz = _trackPos.Z - Pos.Z;
+        double vx = _trackVel.X;
+        double vy = _trackVel.Y;
+        double vz = _trackVel.Z;
+        double a = (vx * vx + vy * vy + vz * vz) - BulletSpeed * BulletSpeed;
+        double b = 2.0 * (rx * vx + ry * vy + rz * vz);
+        double c = rx * rx + ry * ry + rz * rz;
+        double disc = b * b - 4.0 * a * c;
+
+        XYZPos aimPoint = _trackPos;
+        if (a < 0.0 && disc >= 0.0)
+        {
+            double tof = (-b - Math.Sqrt(disc)) / (2.0 * a);
+            if (tof > 0.0)
+            {
+                aimPoint = new XYZPos(
+                    _trackPos.X + vx * tof,
+                    _trackPos.Y + vy * tof,
+                    _trackPos.Z + vz * tof);
+            }
+        }
+
+        // 방위각/고각/거리 계산 (조준점은 예측 위치, 사거리 판정은 현재 위치 기준 유지)
+        _aimAzimuth = GeoUtil.Bearing(Pos, aimPoint);
+        double dx = aimPoint.X - Pos.X;
+        double dy = aimPoint.Y - Pos.Y;
+        double dz = aimPoint.Z - Pos.Z;
         double dist2D = Math.Sqrt(dx * dx + dy * dy);
         _aimElevation = GeoUtil.RadToDeg(Math.Atan2(dz, dist2D));
         _trackDist = GeoUtil.Distance(Pos, _trackPos);

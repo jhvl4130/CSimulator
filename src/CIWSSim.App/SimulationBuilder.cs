@@ -10,13 +10,18 @@ namespace CIWSSimulator.App;
 public class SimulationBuilder
 {
     // 상수
-    private const double SimEndTime = 60.0;   // Test 시뮬레이션 시간 단축 (원복 시 180.0)
+    private const double SimEndTime = 120.0;   // Test 시뮬레이션 시간 단축 (원복 시 180.0)
     private const double DefaultSpeed = 100.0;
     private const double DetectRange = 10000.0;
     private const double DetectPeriod = 1.0;
     private const double TrackPeriod = 0.04;
     private const double FireRange = 10000.0;
     private const double AssetRadius = 500.0;
+
+    // Airplane AABB (world-axis aligned) — x 좌우, y 앞뒤, z 상하
+    private const double AirplaneSizeX = 2.0;
+    private const double AirplaneSizeY = 4.5;
+    private const double AirplaneSizeZ = 0.4;
 
     /// <summary>
     /// 모든 입출력 파일이 위치하는 디렉토리
@@ -215,7 +220,8 @@ public class SimulationBuilder
             double azimuth = tgt.Rotation.Yaw;
             double elevation = tgt.Rotation.Pitch;
 
-            var airplane = _engine.AddAirplane(tgtBaseId, pos, DefaultSpeed, azimuth, elevation, tgt.StartT);
+            var airplane = _engine.AddAirplane(tgtBaseId, pos, DefaultSpeed, azimuth, elevation, tgt.StartT,
+                AirplaneSizeX, AirplaneSizeY, AirplaneSizeZ);
             airplane.InputId = tgt.Id;
             airplane.Destination = destination;   // Test (복원 시 제거)
             tgtBaseId++;

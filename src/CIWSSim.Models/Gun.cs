@@ -32,7 +32,7 @@ public class Gun : Model
     /// <summary>
     /// 탄속 (m/s)
     /// </summary>
-    public double BulletSpeed { get; set; } = 1000.0;
+    public double BulletSpeed { get; set; } = 800.0;
 
     /// <summary>
     /// 탄환 파워
@@ -53,6 +53,12 @@ public class Gun : Model
     /// 탄종
     /// </summary>
     public string BulletType { get; set; } = "default";
+
+    /// <summary>
+    /// 근접 격추 반경 (m). 탄환 선분이 표적 중심에서 이 거리 이내를 통과하면 명중.
+    /// 실기 분산·파편·시한신관 효과를 단일 반경으로 집약한 값.
+    /// </summary>
+    public double HitRadius { get; set; } = 10.0;
 
     /// <summary>
     /// FCS 참조 (생성 시 주입)
@@ -98,7 +104,7 @@ public class Gun : Model
     /// <summary>
     /// 조준 허용 오차 (도)
     /// </summary>
-    private const double AimTolerance = 0.2;
+    private const double AimTolerance = 0.5;
 
     /// <summary>
     /// 충돌 검사 마진 (초). FireTime 기준으로 targetFireTime ± 이 값 범위의 탄환만 검사.
@@ -148,12 +154,13 @@ public class Gun : Model
 
         // 조준 완료 + 사격 on + 탄약 있으면 발사 (RPM 간격 준수)
         bool onTarget = IsOnTarget();
-        if (_isFiring && onTarget && Ammo > 0 && (t - _lastFireTime) >= FireInterval)
+        // 260421 FireInterval 누적형 루프: DrivePeriod(0.01) > FireInterval(≈0.0133) 시에도 RPM 명목값 도달
+        while (_isFiring && onTarget && Ammo > 0 && (t - _lastFireTime) >= FireInterval)
         {
             FireBullet(t);
             Ammo--;
             _totalFired++;
-            _lastFireTime = t;
+            _lastFireTime += FireInterval;
         }
 
         // 탄환 일괄 갱신: 위치 보간 + 할당 표적 충돌 검사
@@ -324,9 +331,6 @@ public class Gun : Model
             FireTime = t
         };
         _bullets.Add(bullet);
-
-        Logger.Dbg(DbgFlag.Collide,
-            $"{t:F6} [{Name}] Fired bullet for target {_currentTargetId}, ammo={Ammo - 1}\n");
     }
 
     private void UpdateBullets(double t)
@@ -358,26 +362,20 @@ public class Gun : Model
         int lo = LowerBound(_bullets, targetFireTime - CollisionMarginSec);
         int hi = UpperBound(_bullets, targetFireTime + CollisionMarginSec);
 
-        // [lo, hi] 구간만 보간 + AABB 충돌 검사
-        bool hasSize = tgt.HalfX > 0.0 || tgt.HalfY > 0.0 || tgt.HalfZ > 0.0;
-        if (hasSize)
+        // [lo, hi] 구간만 보간 + 근접권(구) 교차 판정
+        for (int i = hi; i >= lo; i--)
         {
-            for (int i = hi; i >= lo; i--)
-            {
-                var b = _bullets[i];
-                var prevPos = InterpolateBullet(b, t - DrivePeriod);
-                b.Pos = InterpolateBullet(b, t);
+            var b = _bullets[i];
+            var prevPos = InterpolateBullet(b, t - DrivePeriod);
+            b.Pos = InterpolateBullet(b, t);
 
-                if (CollisionDetection.IsSegmentAABB(
-                    prevPos, b.Pos,
-                    tgt.Pos, tgt.HalfX, tgt.HalfY, tgt.HalfZ))
-                {
-                    Logger.Dbg(DbgFlag.Collide,
-                        $"{t:F6} [{Name}] bullet → [{tgt.Name}] Hit\n");
-                    Engine!.SendEvent(tgt, new AttackEvent(BulletPower, Fcs));
-                    SendBulletImpact(b, true);
-                    _bullets.RemoveAt(i);
-                }
+            if (CollisionDetection.IsSegmentSphere(prevPos, b.Pos, tgt.Pos, HitRadius))
+            {
+                Logger.Dbg(DbgFlag.Collide,
+                    $"{t:F6} [{Name}] bullet → [{tgt.Name}] Hit\n");
+                Engine!.SendEvent(tgt, new AttackEvent(BulletPower, Fcs));
+                SendBulletImpact(b, true);
+                _bullets.RemoveAt(i);
             }
         }
     }

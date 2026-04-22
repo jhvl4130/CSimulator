@@ -101,6 +101,30 @@ public static class CollisionDetection
     }
 
     /// <summary>
+    /// 선분(p0→p1)과 구(center, radius) 교차 판정.
+    /// 선분 위에서 center에 가장 가까운 점의 거리를 구해 radius 이내인지 확인.
+    /// 탄환 근접권 기반 격추 판정용.
+    /// </summary>
+    public static bool IsSegmentSphere(in XYZPos p0, in XYZPos p1,
+        in XYZPos center, double radius)
+    {
+        double dx = p1.X - p0.X, dy = p1.Y - p0.Y, dz = p1.Z - p0.Z;
+        double fx = p0.X - center.X, fy = p0.Y - center.Y, fz = p0.Z - center.Z;
+        double a = dx * dx + dy * dy + dz * dz;
+        double r2 = radius * radius;
+
+        if (a < 1e-12)
+            return fx * fx + fy * fy + fz * fz <= r2;
+
+        double t = -(fx * dx + fy * dy + fz * dz) / a;
+        if (t < 0.0) t = 0.0;
+        else if (t > 1.0) t = 1.0;
+
+        double ex = fx + t * dx, ey = fy + t * dy, ez = fz + t * dz;
+        return ex * ex + ey * ey + ez * ez <= r2;
+    }
+
+    /// <summary>
     /// 점이 반구(상반구) 내부에 있는지 판정.
     /// center의 Z를 바닥으로, 위쪽으로 radius만큼의 반구.
     /// </summary>
