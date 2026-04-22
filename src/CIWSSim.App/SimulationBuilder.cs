@@ -38,6 +38,8 @@ public class SimulationBuilder
     private readonly Dictionary<int, long> _lastLogIndex = new();
     private readonly Dictionary<int, int> _lastTargetStatus = new();
     private readonly Dictionary<int, int> _lastGunFire = new();
+    private double _pendingStatusTime = double.NaN;
+    private string? _pendingStatusLine;
 
     public SimulationBuilder(string[] args)
     {
@@ -59,6 +61,8 @@ public class SimulationBuilder
         Build();
 
         _engine.Start(SimEndTime);
+
+        FlushPendingStatus();
 
         _c2?.Dispose();
         _targetCsvWriter?.Dispose();
@@ -179,15 +183,32 @@ public class SimulationBuilder
     private void WriteStatusRow(double time)
     {
         if (_statusCsvWriter is null || _c2 is null) return;
-        _statusCsvWriter.WriteLine(string.Join(',', new[]
+
+        string line = string.Join(',', new[]
         {
             time.ToString("F4"),
             _c2.TotalTargets.ToString(),
             _c2.DetectedCount.ToString(),
             _c2.InterceptSuccess.ToString(),
             _c2.InterceptFail.ToString(),
-        }));
+        });
+
+        // 동일 Time에 여러 호출이 들어오면 마지막 값만 남기도록 버퍼링
+        if (_pendingStatusLine is not null && time != _pendingStatusTime)
+        {
+            _statusCsvWriter.WriteLine(_pendingStatusLine);
+            _statusCsvWriter.Flush();
+        }
+        _pendingStatusTime = time;
+        _pendingStatusLine = line;
+    }
+
+    private void FlushPendingStatus()
+    {
+        if (_statusCsvWriter is null || _pendingStatusLine is null) return;
+        _statusCsvWriter.WriteLine(_pendingStatusLine);
         _statusCsvWriter.Flush();
+        _pendingStatusLine = null;
     }
 
     private void WriteCiwsRow(double time, Gun gun)

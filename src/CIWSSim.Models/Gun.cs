@@ -376,6 +376,9 @@ public class Gun : Model
                 Engine!.SendEvent(tgt, new AttackEvent(BulletPower, Fcs));
                 SendBulletImpact(b, true);
                 _bullets.RemoveAt(i);
+
+                // 명중 누적으로 표적이 파괴되었으면 잔여 탄환 처리는 다음 tick의 IsEnabled 체크에 위임
+                if (!tgt.IsEnabled) break;
             }
         }
     }

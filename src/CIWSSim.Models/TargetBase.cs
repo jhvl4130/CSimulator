@@ -112,6 +112,9 @@ public abstract class TargetBase : Model
     /// </summary>
     protected void HandleAttack(double t, AttackEvent attack)
     {
+        // 이미 파괴된 표적에 대한 잔여 AttackEvent는 무시 (같은 tick에 다발 명중 시 중복 처리 방지)
+        if (Status != TargetStatus.Alive) return;
+
         // 260420 단발 격추 정책: 탄환 1발이라도 명중하면 파괴
         Health = 0.0;
         Status = TargetStatus.Destroyed;
