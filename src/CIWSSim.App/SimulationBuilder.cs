@@ -118,25 +118,39 @@ public class SimulationBuilder
             model.IsStateChanged = false;
 
             long logIndex = (long)Math.Round(time / OutputPeriod);
-            bool sameBucket = _lastLogIndex.TryGetValue(model.Id, out var last) && last == logIndex;
-
             double gridTime = logIndex * OutputPeriod;
 
             if (model.Class == ModelClass.Target && model is TargetBase target)
             {
                 // 260415 Status 전환 시점은 반드시 기록 (Alive→Destroyed/Collided가 버킷 중복으로 누락되던 문제)
+                bool hasPrevIdx = _lastLogIndex.TryGetValue(model.Id, out var lastIdxT);
+                bool inOrBeforeLastT = hasPrevIdx && lastIdxT >= logIndex;
                 int curStatus = (int)target.Status;
                 bool statusChanged = !_lastTargetStatus.TryGetValue(model.Id, out var prev) || prev != curStatus;
-                if (sameBucket && !statusChanged) return;
+                if (inOrBeforeLastT && !statusChanged) return;
+                if (inOrBeforeLastT && statusChanged)
+                {
+                    // 같은(또는 이미 미래로 밀린) bucket 내 Status 전환 → 다음 sample로 미룸
+                    logIndex = lastIdxT + 1;
+                    gridTime = logIndex * OutputPeriod;
+                }
                 _lastLogIndex[model.Id] = logIndex;
                 _lastTargetStatus[model.Id] = curStatus;
                 WriteTargetRow(gridTime, target);
             }
             else if (model.Type == MtGun && model is Gun gun)
             {
+                bool hasPrev = _lastLogIndex.TryGetValue(model.Id, out var lastIdx);
+                bool inOrBeforeLast = hasPrev && lastIdx >= logIndex;
                 bool fireChanged = !_lastGunFire.TryGetValue(model.Id, out var prevFire)
                                    || prevFire != gun.LastFireTargetId;
-                if (sameBucket && !fireChanged) return;
+                if (inOrBeforeLast && !fireChanged) return;
+                if (inOrBeforeLast && fireChanged)
+                {
+                    // 같은(또는 이미 미래로 밀린) bucket 내 Fire 전환 → 다음 sample로 미룸
+                    logIndex = lastIdx + 1;
+                    gridTime = logIndex * OutputPeriod;
+                }
                 _lastLogIndex[model.Id] = logIndex;
                 _lastGunFire[model.Id] = gun.LastFireTargetId;
                 WriteCiwsRow(gridTime, gun);

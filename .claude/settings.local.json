@@ -22,7 +22,8 @@
       "Bash(awk -F, 'NR>1 {print $2}' /d/CIWSSimulator/File/event_log.csv)",
       "Bash(grep -v ',0,$' /d/CIWSSimulator/File/CIWS.csv)",
       "Bash(py --version)",
-      "Bash(py *)"
+      "Bash(py *)",
+      "PowerShell(Import-Csv *)"
     ]
   }
 }
