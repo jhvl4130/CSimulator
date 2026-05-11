@@ -22,6 +22,21 @@ public class TrackRadar : Model
     /// </summary>
     public Model? Fcs { get; set; }
 
+    /// <summary>지형 LOS 게이트 (null이면 LOS 검사 생략)</summary>
+    public TerrainMap? Terrain { get; set; }
+
+    /// <summary>LOS 광선 샘플 간격(m)</summary>
+    public double SampleStepM { get; set; } = 30.0;
+
+    /// <summary>4/3 등가지구반경 보정 사용 여부</summary>
+    public bool UseEarthCurvature { get; set; } = true;
+
+    /// <summary>안테나 높이(m). Pos.Z에 가산해서 LOS 시작점으로 사용.</summary>
+    public double AntennaHeightM { get; set; } = 0.0;
+
+    /// <summary>연속 LOS 실패 tick 수가 이 값에 도달하면 TrackLost</summary>
+    public int LosLossTicks { get; set; } = 3;
+
     /// <summary>
     /// 현재 추적 중인 표적
     /// </summary>
@@ -34,6 +49,9 @@ public class TrackRadar : Model
     private XYZPos _prevVel;
     private double _prevT;
     private bool _hasPrev;
+
+    /// <summary>연속 LOS 실패 tick 카운터</summary>
+    private int _losMissCount;
 
     public TrackRadar(int id) : base(id)
     {
@@ -65,6 +83,29 @@ public class TrackRadar : Model
                 Engine!.SendEvent(Fcs, new TrackLostEvent(_target.Id));
             StopTracking();
             return TInfinite;
+        }
+
+        // 지형 LOS 게이트 (hysteresis: 연속 LosLossTicks tick 실패 시 TrackLost)
+        if (Terrain is not null)
+        {
+            var from = new XYZPos(Pos.X, Pos.Y, Pos.Z + AntennaHeightM);
+            bool los = Terrain.HasLineOfSight(from, _target.Pos, SampleStepM, UseEarthCurvature);
+            if (!los)
+            {
+                _losMissCount++;
+                if (_losMissCount >= LosLossTicks)
+                {
+                    Logger.Dbg(DbgFlag.Collide,
+                        $"{t:F6} [{Name}] Track lost: [{_target.Name}] LOS blocked {_losMissCount} ticks\n");
+                    if (Fcs is not null)
+                        Engine!.SendEvent(Fcs, new TrackLostEvent(_target.Id));
+                    StopTracking();
+                    return TInfinite;
+                }
+                // hysteresis 임계 미달 - 이번 tick은 FCS에 데이터 안 보냄
+                return TrackPeriod;
+            }
+            _losMissCount = 0;
         }
 
         // 위치/속도/가속도 계산
@@ -112,6 +153,7 @@ public class TrackRadar : Model
                 _target = order.Target;
                 TrackPeriod = order.Period;
                 _hasPrev = false;
+                _losMissCount = 0;
                 Phase = PhaseType.Run;
                 Logger.Dbg(DbgFlag.Init,
                     $"{t:F6} [{Name}] Tracking [{_target.Name}] period={TrackPeriod}s\n");
@@ -133,6 +175,7 @@ public class TrackRadar : Model
     {
         _target = null;
         _hasPrev = false;
+        _losMissCount = 0;
         Phase = PhaseType.WaitStart;
     }
 }

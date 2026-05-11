@@ -31,6 +31,7 @@ public class SimulationBuilder
     private readonly InputConfig _input;
     private readonly Engine _engine = new();
 
+    private TerrainMap? _terrain;
     private C2Control? _c2;
     private StreamWriter? _targetCsvWriter;
     private StreamWriter? _ciwsCsvWriter;
@@ -79,6 +80,8 @@ public class SimulationBuilder
 
         _engine.Origin = ResolveOrigin(ciwsItems);
 
+        _terrain = LoadTerrain();
+
         SetupCsvOutput();
 
         _c2 = _engine.AddC2Control(500, Path.Combine(FileDir, "event_log.csv"));
@@ -89,6 +92,7 @@ public class SimulationBuilder
         var siteCenter = CalcSiteCenter(ciwsItems);
         var sr = _engine.AddSearchRadar(100, siteCenter, DetectRange, DetectPeriod);
         sr.C2 = _c2;
+        ApplyTerrainToSearchRadar(sr);
 
         _engine.AddAssetZone(900, siteCenter, AssetRadius, _c2);
 
@@ -103,6 +107,49 @@ public class SimulationBuilder
             return new LLHPos(_input.WorldMapLLH.Latitude, _input.WorldMapLLH.Longitude, 0.0);
 
         throw new InvalidOperationException("Origin을 결정할 수 없습니다.");
+    }
+
+    private TerrainMap? LoadTerrain()
+    {
+        if (_input.Terrain is null || string.IsNullOrWhiteSpace(_input.Terrain.MetaPath))
+            return null;
+
+        string metaPath = Path.IsPathRooted(_input.Terrain.MetaPath)
+            ? _input.Terrain.MetaPath
+            : Path.Combine(FileDir, _input.Terrain.MetaPath);
+
+        var terrain = TerrainMap.LoadFromMeta(metaPath);
+
+        // origin 일치 검증 — 격자 좌표가 ENU 원점에 맞춰 만들어졌는지 확인
+        const double OriginTolDeg = 1e-6; // ≈ 0.11m at 위도 37°
+        double dLat = Math.Abs(terrain.OriginLlh.Lat - _engine.Origin.Lat);
+        double dLon = Math.Abs(terrain.OriginLlh.Lon - _engine.Origin.Lon);
+        if (dLat > OriginTolDeg || dLon > OriginTolDeg)
+        {
+            throw new InvalidOperationException(
+                $"지형 메타의 originLlh({terrain.OriginLlh.Lat:F8}, {terrain.OriginLlh.Lon:F8})가 " +
+                $"시뮬 Origin({_engine.Origin.Lat:F8}, {_engine.Origin.Lon:F8})과 일치하지 않습니다. " +
+                "동일 origin으로 다시 변환하세요.");
+        }
+
+        return terrain;
+    }
+
+    private void ApplyTerrainToSearchRadar(SearchRadar sr)
+    {
+        if (_terrain is null || _input.Terrain is null) return;
+        sr.Terrain = _terrain;
+        sr.SampleStepM = _input.Terrain.SampleStepM;
+        sr.UseEarthCurvature = _input.Terrain.UseEarthCurvature;
+    }
+
+    private void ApplyTerrainToTrackRadar(TrackRadar tr)
+    {
+        if (_terrain is null || _input.Terrain is null) return;
+        tr.Terrain = _terrain;
+        tr.SampleStepM = _input.Terrain.SampleStepM;
+        tr.UseEarthCurvature = _input.Terrain.UseEarthCurvature;
+        tr.LosLossTicks = _input.Terrain.LosLossTicks;
     }
 
     private void SetupCsvOutput()
@@ -238,6 +285,7 @@ public class SimulationBuilder
             fcs.InputId = ciws.Id;
             trackRadar.InputId = ciws.Id;
             gun.InputId = ciws.Id;
+            ApplyTerrainToTrackRadar(trackRadar);
             ciwsBaseId += 10;
         }
     }

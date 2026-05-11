@@ -7,7 +7,23 @@ public class InputConfig
     public int Version { get; set; }
     public string GroupKey { get; set; } = "";
     public WorldMapLLH? WorldMapLLH { get; set; }
+    public TerrainConfig? Terrain { get; set; }
     public List<RecordGroup> Records { get; set; } = new();
+}
+
+public class TerrainConfig
+{
+    /// <summary>지형 메타 JSON 경로 (FileDir 기준 상대 또는 절대)</summary>
+    public string MetaPath { get; set; } = "";
+
+    /// <summary>LOS 광선 샘플 간격(m). 셀 크기 또는 그 절반 권장 (Nyquist).</summary>
+    public double SampleStepM { get; set; } = 30.0;
+
+    /// <summary>4/3 등가지구반경 보정 사용 여부</summary>
+    public bool UseEarthCurvature { get; set; } = true;
+
+    /// <summary>TrackRadar 연속 LOS 실패 시 TrackLost 임계 tick (hysteresis)</summary>
+    public int LosLossTicks { get; set; } = 3;
 }
 
 public class WorldMapLLH

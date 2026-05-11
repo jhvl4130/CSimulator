@@ -32,6 +32,18 @@ public class SearchRadar : Model
     /// </summary>
     public Model? C2 { get; set; }
 
+    /// <summary>지형 LOS 게이트 (null이면 LOS 검사 생략)</summary>
+    public TerrainMap? Terrain { get; set; }
+
+    /// <summary>LOS 광선 샘플 간격(m)</summary>
+    public double SampleStepM { get; set; } = 30.0;
+
+    /// <summary>4/3 등가지구반경 보정 사용 여부</summary>
+    public bool UseEarthCurvature { get; set; } = true;
+
+    /// <summary>안테나 높이(m). Pos.Z에 가산해서 LOS 시작점으로 사용.</summary>
+    public double AntennaHeightM { get; set; } = 0.0;
+
     /// <summary>
     /// 이전 추적 데이터 (속도/가속도 계산용)
     /// </summary>
@@ -63,6 +75,13 @@ public class SearchRadar : Model
 
             double dist = GeoUtil.Distance(Pos, target.Pos);
             if (dist > DetectRange) continue;
+
+            if (Terrain is not null)
+            {
+                var from = new XYZPos(Pos.X, Pos.Y, Pos.Z + AntennaHeightM);
+                if (!Terrain.HasLineOfSight(from, target.Pos, SampleStepM, UseEarthCurvature))
+                    continue;
+            }
 
             // 속도/가속도 계산
             var pos = target.Pos;
