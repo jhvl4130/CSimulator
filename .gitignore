@@ -363,3 +363,4 @@ MigrationBackup/
 FodyWeavers.xsd
 event_log.csv
 output.csv
+.claude/settings.local.json

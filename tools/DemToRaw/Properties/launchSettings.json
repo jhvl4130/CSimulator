@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "DemToRaw": {
+      "commandName": "Project",
+      "commandLineArgs": "--tiff D:\\CIWSSimulator\\File\\korea_dem.tif --origin-lat 37.586394 --origin-lon 126.974944 --half-size 15000 --cell-size 30 --out-dir D:\\CIWSSimulator\\File --name terrain"
+    }
+  }
+}
