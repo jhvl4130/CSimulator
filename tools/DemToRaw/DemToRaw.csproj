@@ -10,11 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BitMiracle.LibTiff.NET" Version="2.4.660" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\CIWSSim.Core\CIWSSim.Core.csproj" />
+    <ProjectReference Include="..\..\src\CIWSSim.TerrainImport\CIWSSim.TerrainImport.csproj" />
   </ItemGroup>
 
 </Project>

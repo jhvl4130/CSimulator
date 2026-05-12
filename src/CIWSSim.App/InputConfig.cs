@@ -16,6 +16,18 @@ public class TerrainConfig
     /// <summary>지형 메타 JSON 경로 (FileDir 기준 상대 또는 절대)</summary>
     public string MetaPath { get; set; } = "";
 
+    /// <summary>
+    /// 메타 JSON이 없을 때 자동 빌드에 사용할 .tiff 경로 (FileDir 기준 상대 또는 절대).
+    /// 비어있으면 자동 빌드 비활성 — MetaPath 파일이 없으면 throw.
+    /// </summary>
+    public string TiffPath { get; set; } = "";
+
+    /// <summary>자동 빌드 시 ENU 원점 기준 ±반경(m). 기본 15000.</summary>
+    public double HalfSizeM { get; set; } = 15000.0;
+
+    /// <summary>자동 빌드 시 격자 셀 크기(m). 기본 30.</summary>
+    public double CellSizeM { get; set; } = 30.0;
+
     /// <summary>LOS 광선 샘플 간격(m). 셀 크기 또는 그 절반 권장 (Nyquist).</summary>
     public double SampleStepM { get; set; } = 30.0;
 

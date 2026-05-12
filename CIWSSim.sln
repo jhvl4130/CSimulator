@@ -13,6 +13,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{07C2787E
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DemToRaw", "tools\DemToRaw\DemToRaw.csproj", "{C1C2D86B-B30D-4C87-969E-D8A27E9FE1B5}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{827E0CD3-B72D-47B6-A68D-7590B98EB39B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CIWSSim.TerrainImport", "src\CIWSSim.TerrainImport\CIWSSim.TerrainImport.csproj", "{4EE4BB4B-85CE-4497-AA78-3439956A2BC8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -71,11 +75,24 @@ Global
 		{C1C2D86B-B30D-4C87-969E-D8A27E9FE1B5}.Release|x64.Build.0 = Release|Any CPU
 		{C1C2D86B-B30D-4C87-969E-D8A27E9FE1B5}.Release|x86.ActiveCfg = Release|Any CPU
 		{C1C2D86B-B30D-4C87-969E-D8A27E9FE1B5}.Release|x86.Build.0 = Release|Any CPU
+		{4EE4BB4B-85CE-4497-AA78-3439956A2BC8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4EE4BB4B-85CE-4497-AA78-3439956A2BC8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4EE4BB4B-85CE-4497-AA78-3439956A2BC8}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{4EE4BB4B-85CE-4497-AA78-3439956A2BC8}.Debug|x64.Build.0 = Debug|Any CPU
+		{4EE4BB4B-85CE-4497-AA78-3439956A2BC8}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{4EE4BB4B-85CE-4497-AA78-3439956A2BC8}.Debug|x86.Build.0 = Debug|Any CPU
+		{4EE4BB4B-85CE-4497-AA78-3439956A2BC8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4EE4BB4B-85CE-4497-AA78-3439956A2BC8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4EE4BB4B-85CE-4497-AA78-3439956A2BC8}.Release|x64.ActiveCfg = Release|Any CPU
+		{4EE4BB4B-85CE-4497-AA78-3439956A2BC8}.Release|x64.Build.0 = Release|Any CPU
+		{4EE4BB4B-85CE-4497-AA78-3439956A2BC8}.Release|x86.ActiveCfg = Release|Any CPU
+		{4EE4BB4B-85CE-4497-AA78-3439956A2BC8}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{C1C2D86B-B30D-4C87-969E-D8A27E9FE1B5} = {07C2787E-EAC7-C090-1BA3-A61EC2A24D84}
+		{4EE4BB4B-85CE-4497-AA78-3439956A2BC8} = {827E0CD3-B72D-47B6-A68D-7590B98EB39B}
 	EndGlobalSection
 EndGlobal

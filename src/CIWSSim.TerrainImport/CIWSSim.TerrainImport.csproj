@@ -1,22 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <RootNamespace>CIWSSimulator.TerrainImport</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Update="input.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <PackageReference Include="BitMiracle.LibTiff.NET" Version="2.4.660" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\CIWSSim.Core\CIWSSim.Core.csproj" />
-    <ProjectReference Include="..\CIWSSim.Models\CIWSSim.Models.csproj" />
-    <ProjectReference Include="..\CIWSSim.TerrainImport\CIWSSim.TerrainImport.csproj" />
   </ItemGroup>
 
 </Project>

@@ -3,6 +3,7 @@ using CIWSSimulator.Core;
 using CIWSSimulator.Core.Geometry;
 using CIWSSimulator.Core.Util;
 using CIWSSimulator.Models;
+using CIWSSimulator.TerrainImport;
 using static CIWSSimulator.Core.SimConstants;
 
 namespace CIWSSimulator.App;
@@ -114,9 +115,17 @@ public class SimulationBuilder
         if (_input.Terrain is null || string.IsNullOrWhiteSpace(_input.Terrain.MetaPath))
             return null;
 
-        string metaPath = Path.IsPathRooted(_input.Terrain.MetaPath)
-            ? _input.Terrain.MetaPath
-            : Path.Combine(FileDir, _input.Terrain.MetaPath);
+        string metaPath = ResolveFileDir(_input.Terrain.MetaPath);
+
+        // 메타 JSON이 없으면 자동 빌드 시도 (TiffPath 지정 시)
+        if (!File.Exists(metaPath))
+        {
+            if (string.IsNullOrWhiteSpace(_input.Terrain.TiffPath))
+                throw new FileNotFoundException(
+                    $"지형 메타 파일이 없고 자동 빌드용 TiffPath도 비어있습니다: {metaPath}", metaPath);
+
+            BuildTerrainFromTiff(metaPath);
+        }
 
         var terrain = TerrainMap.LoadFromMeta(metaPath);
 
@@ -134,6 +143,30 @@ public class SimulationBuilder
 
         return terrain;
     }
+
+    private void BuildTerrainFromTiff(string metaPath)
+    {
+        var cfg = _input.Terrain!;
+        string tiffPath = ResolveFileDir(cfg.TiffPath);
+        string outDir = Path.GetDirectoryName(metaPath) ?? FileDir;
+        string name = Path.GetFileNameWithoutExtension(metaPath);
+
+        Console.WriteLine($"[Terrain] 메타 없음 → 자동 빌드: tiff={tiffPath}, out={outDir}\\{name}.{{raw,json}}");
+
+        TerrainBuilder.Build(new TerrainBuilder.Options
+        {
+            TiffPath = tiffPath,
+            OriginLat = _engine.Origin.Lat,
+            OriginLon = _engine.Origin.Lon,
+            HalfSizeM = cfg.HalfSizeM,
+            CellSizeM = cfg.CellSizeM,
+            OutDir = outDir,
+            Name = name,
+        }, msg => Console.WriteLine($"[Terrain] {msg}"));
+    }
+
+    private string ResolveFileDir(string path) =>
+        Path.IsPathRooted(path) ? path : Path.Combine(FileDir, path);
 
     private void ApplyTerrainToSearchRadar(SearchRadar sr)
     {
