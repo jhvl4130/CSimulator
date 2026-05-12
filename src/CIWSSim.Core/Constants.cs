@@ -16,6 +16,17 @@ public enum TargetStatus
     Collided = 2,
 }
 
+/// <summary>
+/// 시뮬레이션 외부(SimulationBuilder)로 통지되는 단발성 이벤트 종류.
+/// protobuf EventType과 1:1 매핑되도록 값 동일하게 유지.
+/// </summary>
+public enum SimEventKind
+{
+    Fire = 0,
+    Hit = 1,
+    SelfDestruct = 2,
+}
+
 public enum PhaseType
 {
     // 공통

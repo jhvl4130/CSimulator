@@ -229,13 +229,9 @@ public static class EngineExtensions
 
     // C2Control
 
-    public static C2Control AddC2Control(this Engine engine, int id,
-        string? eventLogPath = "event_log.csv")
+    public static C2Control AddC2Control(this Engine engine, int id)
     {
-        var model = new C2Control(id)
-        {
-            EventLogPath = eventLogPath
-        };
+        var model = new C2Control(id);
         engine.RegisterModel(model);
         return model;
     }

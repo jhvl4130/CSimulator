@@ -1,4 +1,3 @@
-using System.Text;
 using CIWSSimulator.Core;
 using CIWSSimulator.Core.Events;
 using CIWSSimulator.Core.Geometry;
@@ -34,16 +33,6 @@ public class C2Control : Model
     private readonly HashSet<int> _everDetected = new();
 
     /// <summary>
-    /// 이벤트 로그 StreamWriter
-    /// </summary>
-    private StreamWriter? _logWriter;
-
-    /// <summary>
-    /// 이벤트 로그 출력 경로
-    /// </summary>
-    public string? EventLogPath { get; set; } = "event_log.csv";
-
-    /// <summary>
     /// 시나리오 전체 표적 수 (등록 시점에 SimulationBuilder가 설정)
     /// </summary>
     public int TotalTargets { get; set; }
@@ -63,6 +52,12 @@ public class C2Control : Model
     /// </summary>
     public int InterceptFail { get; private set; }
 
+    /// <summary>표적이 한 번이라도 SearchRadar에 탐지되었는지</summary>
+    public bool IsDetected(int targetId) => _everDetected.Contains(targetId);
+
+    /// <summary>표적이 현재 FCS에 할당되어 TrackRadar로 추적 중인지</summary>
+    public bool IsTracked(int targetId) => _targetFcsMap.ContainsKey(targetId);
+
     /// <summary>
     /// 집계값 변동 시점에 호출되는 콜백 (비주기 Status.csv용)
     /// </summary>
@@ -80,14 +75,6 @@ public class C2Control : Model
         InitRuntimeVars();
         Phase = PhaseType.Run;
         IsEnabled = true;
-
-        // 이벤트 로그 초기화
-        if (EventLogPath is not null)
-        {
-            _logWriter = new StreamWriter(EventLogPath, false, Encoding.UTF8);
-            _logWriter.WriteLine("Time,EventType,SourceID,TargetID,CiwsID,Detail");
-        }
-
         return TInfinite;
     }
 
@@ -154,8 +141,6 @@ public class C2Control : Model
 
         Logger.Dbg(DbgFlag.Init,
             $"{t:F6} [{Name}] Assign target {ev.TargetId} → CIWS {ciwsId}\n");
-        WriteLog(t, "Assign", Id, ev.TargetId, ciwsId,
-            $"Target {ev.TargetId} assigned to CIWS {ciwsId}");
 
         Engine!.SendEvent(fcs, new TargetDesignationEvent(DesignationCmd.Start, ev.TargetId, target));
 
@@ -170,16 +155,13 @@ public class C2Control : Model
         if (_targetFcsMap.TryGetValue(ev.TargetId, out var fcs))
             ciwsId = (fcs is FCS f) ? f.CiwsId : fcs.Id;
 
-        // 사격 시작/종료(성공/실패)만 로깅
+        // 사격 시작/종료(성공/실패) — 외부 로그 제거(protobuf EventType 3종에 없음)
         if (ev.Status == EngagementStatus.FireStart)
         {
-            WriteLog(t, "FireStart", Id, ev.TargetId, ciwsId,
-                $"az={ev.Azimuth:F1} el={ev.Elevation:F1}");
+            // no-op
         }
         else if (ev.Status == EngagementStatus.Success)
         {
-            WriteLog(t, "Kill", Id, ev.TargetId, ciwsId,
-                $"fired={ev.BulletFire} remain={ev.BulletRemain}");
             _targetFcsMap.Remove(ev.TargetId);
             _latestTrackData.Remove(ev.TargetId);
             InterceptSuccess++;
@@ -187,8 +169,6 @@ public class C2Control : Model
         }
         else if (ev.Status == EngagementStatus.Fail)
         {
-            WriteLog(t, "Miss", Id, ev.TargetId, ciwsId,
-                $"fired={ev.BulletFire} remain={ev.BulletRemain}");
             _targetFcsMap.Remove(ev.TargetId);
 
             // 표적이 살아있으면 다른 CIWS에 재할당
@@ -206,8 +186,6 @@ public class C2Control : Model
 
                     Logger.Dbg(DbgFlag.Init,
                         $"{t:F6} [{Name}] Reassign target {ev.TargetId} → CIWS {newCiwsId}\n");
-                    WriteLog(t, "Reassign", Id, ev.TargetId, newCiwsId,
-                        $"Target {ev.TargetId} reassigned to CIWS {newCiwsId}");
 
                     Engine!.SendEvent(newFcs, new TargetDesignationEvent(DesignationCmd.Start, ev.TargetId, target));
                 }
@@ -237,9 +215,6 @@ public class C2Control : Model
     private double HandleFail(double t, FailEvent ev)
     {
         var target = ev.Target;
-
-        WriteLog(t, "Fail", Id, target.Id, 0,
-            $"Target {target.Id} reached defense zone - intercept failed");
 
         // 해당 표적을 담당하는 FCS에 FailEvent 전달
         if (_targetFcsMap.TryGetValue(target.Id, out var fcs))
@@ -299,22 +274,4 @@ public class C2Control : Model
         return best;
     }
 
-    // 로그
-
-    private void WriteLog(double t, string eventType, int sourceId, int targetId,
-        int ciwsId, string detail)
-    {
-        _logWriter?.WriteLine(
-            $"{t:F4},{eventType},{sourceId},{targetId},{ciwsId},\"{detail}\"");
-        _logWriter?.Flush();
-    }
-
-    /// <summary>
-    /// 시뮬레이션 종료 시 StreamWriter 정리
-    /// </summary>
-    public void Dispose()
-    {
-        _logWriter?.Dispose();
-        _logWriter = null;
-    }
 }

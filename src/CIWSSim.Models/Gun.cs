@@ -14,6 +14,7 @@ public class Gun : Model
 {
     private class BulletData
     {
+        public uint UniqueId;
         public List<BallisticState> Trajectory = new();
         public int Cursor;
         public XYZPos Pos;
@@ -23,6 +24,24 @@ public class Gun : Model
     }
 
     private readonly List<BulletData> _bullets = new();
+
+    /// <summary>
+    /// SimulationBuilder가 주입하는 Bullet UniqueId 할당기.
+    /// null이면 0 부여(=출력 미사용).
+    /// </summary>
+    public Func<uint>? AllocateBulletUniqueId { get; set; }
+
+    /// <summary>
+    /// 살아있는 모든 Bullet의 (UniqueId, ENU 위치). ObjectInfo 1Hz 그리드 출력용.
+    /// </summary>
+    public IEnumerable<(uint UniqueId, XYZPos Pos)> ActiveBullets
+    {
+        get
+        {
+            foreach (var b in _bullets)
+                yield return (b.UniqueId, b.Pos);
+        }
+    }
 
     /// <summary>
     /// 발사율 (발/분)
@@ -320,9 +339,12 @@ public class Gun : Model
             trajectory.Add(new BallisticState(t + dt, pos));
         }
 
+        uint bulletUid = AllocateBulletUniqueId?.Invoke() ?? 0u;
+
         var target = Engine!.GetModel(_currentTargetId);
         var bullet = new BulletData
         {
+            UniqueId = bulletUid,
             Trajectory = trajectory,
             Cursor = 0,
             Pos = trajectory[0].Pos,
@@ -331,6 +353,9 @@ public class Gun : Model
             FireTime = t
         };
         _bullets.Add(bullet);
+
+        // 격발 이벤트 통지 (SimulationBuilder가 Init.pb / Event.pb / ObjectInfo.pb append)
+        Engine!.OnSimulationEvent?.Invoke(t, bulletUid, SimEventKind.Fire, bullet.Pos);
     }
 
     private void UpdateBullets(double t)
@@ -441,5 +466,9 @@ public class Gun : Model
         {
             Engine!.SendEvent(Fcs, new BulletImpactEvent(b.Pos, isHit, b.TargetId));
         }
+
+        // 피격 / 자폭(만료) 이벤트 통지
+        Engine!.OnSimulationEvent?.Invoke(Engine.TL, b.UniqueId,
+            isHit ? SimEventKind.Hit : SimEventKind.SelfDestruct, b.Pos);
     }
 }

@@ -1,10 +1,12 @@
-using System.Text;
 using CIWSSimulator.Core;
 using CIWSSimulator.Core.Geometry;
 using CIWSSimulator.Core.Util;
 using CIWSSimulator.Models;
+using CIWSSimulator.Proto;
 using CIWSSimulator.TerrainImport;
+using Google.Protobuf;
 using static CIWSSimulator.Core.SimConstants;
+using ProtoEventType = CIWSSimulator.Proto.EventType;
 
 namespace CIWSSimulator.App;
 
@@ -18,6 +20,7 @@ public class SimulationBuilder
     private const double TrackPeriod = 0.04;
     private const double FireRange = 10000.0;
     private const double AssetRadius = 500.0;
+    private const double BulletGridPeriod = 1.0;   // Bullet ObjectInfo 1Hz 그리드
 
     // Airplane AABB (world-axis aligned) — x 좌우, y 앞뒤, z 상하
     private const double AirplaneSizeX = 2.0;
@@ -34,14 +37,26 @@ public class SimulationBuilder
 
     private TerrainMap? _terrain;
     private C2Control? _c2;
-    private StreamWriter? _targetCsvWriter;
-    private StreamWriter? _ciwsCsvWriter;
-    private StreamWriter? _statusCsvWriter;
+    private LLHPos _siteCenterLlh;
+
+    // 출력 스트림
+    private FileStream? _initStream;
+    private FileStream? _objectInfoStream;
+    private FileStream? _eventStream;
+
+    // UniqueId 카운터 (Target → CIWS → Radar → C2 → Bullet 동적, 모두 동일 풀)
+    private uint _nextUniqueId = 1;
+
+    // CIWS Gun 참조 (1Hz Bullet 그리드 enumerate용)
+    private readonly List<Gun> _guns = new();
+
+    // 1Hz Bullet 그리드 트리거 (다음 기록할 절대 시각)
+    private double _nextBulletGridTime = BulletGridPeriod;
+
+    // ObjectInfo 다운샘플링/Status 전환 보존 상태
     private readonly Dictionary<int, long> _lastLogIndex = new();
     private readonly Dictionary<int, int> _lastTargetStatus = new();
     private readonly Dictionary<int, int> _lastGunFire = new();
-    private double _pendingStatusTime = double.NaN;
-    private string? _pendingStatusLine;
 
     public SimulationBuilder(string[] args)
     {
@@ -64,12 +79,9 @@ public class SimulationBuilder
 
         _engine.Start(SimEndTime);
 
-        FlushPendingStatus();
-
-        _c2?.Dispose();
-        _targetCsvWriter?.Dispose();
-        _ciwsCsvWriter?.Dispose();
-        _statusCsvWriter?.Dispose();
+        _initStream?.Dispose();
+        _objectInfoStream?.Dispose();
+        _eventStream?.Dispose();
     }
 
     private void Build()
@@ -80,26 +92,35 @@ public class SimulationBuilder
             .FirstOrDefault(r => r.Tag == "CombatPlatform.Target.Aircraft")?.Items ?? new();
 
         _engine.Origin = ResolveOrigin(ciwsItems);
+        _siteCenterLlh = CalcSiteCenter(ciwsItems);
 
         _terrain = LoadTerrain();
 
-        SetupCsvOutput();
+        SetupProtobufOutput();
 
-        _c2 = _engine.AddC2Control(500, Path.Combine(FileDir, "event_log.csv"));
-        _c2.OnStatsChanged = WriteStatusRow;
+        // Engine 모델 등록 (의존성: C2 → CIWS → SearchRadar → AssetZone → Target)
+        _c2 = _engine.AddC2Control(500);
 
         RegisterCiws(ciwsItems);
 
-        var siteCenter = CalcSiteCenter(ciwsItems);
-        var sr = _engine.AddSearchRadar(100, siteCenter, DetectRange, DetectPeriod);
+        var sr = _engine.AddSearchRadar(100, _siteCenterLlh, DetectRange, DetectPeriod);
         sr.C2 = _c2;
         ApplyTerrainToSearchRadar(sr);
 
-        _engine.AddAssetZone(900, siteCenter, AssetRadius, _c2);
+        _engine.AddAssetZone(900, _siteCenterLlh, AssetRadius, _c2);
 
         RegisterTargets(targetItems);
         _c2.TotalTargets = targetItems.Count;
-        WriteStatusRow(0.0);
+
+        // UniqueId 부여 + Init.pb 기록 (사용자 지정 순서: Target → CIWS → Radar → C2)
+        AssignUniqueIdsAndWriteInit(sr);
+
+        // Bullet UniqueId 콜백 + 이벤트 hook
+        foreach (var gun in _guns)
+            gun.AllocateBulletUniqueId = () => _nextUniqueId++;
+
+        _engine.OnSimulationEvent = HandleSimEvent;
+        _engine.OnModelTransitioned = HandleModelTransitioned;
     }
 
     private LLHPos ResolveOrigin(List<RecordItem> ciwsItems)
@@ -117,7 +138,6 @@ public class SimulationBuilder
 
         string metaPath = ResolveFileDir(_input.Terrain.MetaPath);
 
-        // 메타 JSON이 없으면 자동 빌드 시도 (TiffPath 지정 시)
         if (!File.Exists(metaPath))
         {
             if (string.IsNullOrWhiteSpace(_input.Terrain.TiffPath))
@@ -129,8 +149,7 @@ public class SimulationBuilder
 
         var terrain = TerrainMap.LoadFromMeta(metaPath);
 
-        // origin 일치 검증 — 격자 좌표가 ENU 원점에 맞춰 만들어졌는지 확인
-        const double OriginTolDeg = 1e-6; // ≈ 0.11m at 위도 37°
+        const double OriginTolDeg = 1e-6;
         double dLat = Math.Abs(terrain.OriginLlh.Lat - _engine.Origin.Lat);
         double dLon = Math.Abs(terrain.OriginLlh.Lon - _engine.Origin.Lon);
         if (dLat > OriginTolDeg || dLon > OriginTolDeg)
@@ -185,125 +204,318 @@ public class SimulationBuilder
         tr.LosLossTicks = _input.Terrain.LosLossTicks;
     }
 
-    private void SetupCsvOutput()
+    // 출력
+
+    private void SetupProtobufOutput()
     {
-        _targetCsvWriter = new StreamWriter(Path.Combine(FileDir, "Target.csv"), false, Encoding.UTF8);
-        _targetCsvWriter.WriteLine("Time,ID,Type,Status,Lat,Lon,Alt,Roll,Pitch,Yaw");
-
-        _ciwsCsvWriter = new StreamWriter(Path.Combine(FileDir, "CIWS.csv"), false, Encoding.UTF8);
-        _ciwsCsvWriter.WriteLine("Time,ID,Pitch,Yaw,Fire,Type,FireCount");
-
-        _statusCsvWriter = new StreamWriter(Path.Combine(FileDir, "Status.csv"), false, Encoding.UTF8);
-        _statusCsvWriter.WriteLine("Time,TotalTargets,Detected,InterceptSuccess,InterceptFail");
-
-        _engine.OnModelTransitioned = (time, model) =>
-        {
-            if (!model.IsStateChanged) return;
-            model.IsStateChanged = false;
-
-            long logIndex = (long)Math.Round(time / OutputPeriod);
-            double gridTime = logIndex * OutputPeriod;
-
-            if (model.Class == ModelClass.Target && model is TargetBase target)
-            {
-                // 260415 Status 전환 시점은 반드시 기록 (Alive→Destroyed/Collided가 버킷 중복으로 누락되던 문제)
-                bool hasPrevIdx = _lastLogIndex.TryGetValue(model.Id, out var lastIdxT);
-                bool inOrBeforeLastT = hasPrevIdx && lastIdxT >= logIndex;
-                int curStatus = (int)target.Status;
-                bool statusChanged = !_lastTargetStatus.TryGetValue(model.Id, out var prev) || prev != curStatus;
-                if (inOrBeforeLastT && !statusChanged) return;
-                if (inOrBeforeLastT && statusChanged)
-                {
-                    // 같은(또는 이미 미래로 밀린) bucket 내 Status 전환 → 다음 sample로 미룸
-                    logIndex = lastIdxT + 1;
-                    gridTime = logIndex * OutputPeriod;
-                }
-                _lastLogIndex[model.Id] = logIndex;
-                _lastTargetStatus[model.Id] = curStatus;
-                WriteTargetRow(gridTime, target);
-            }
-            else if (model.Type == MtGun && model is Gun gun)
-            {
-                bool hasPrev = _lastLogIndex.TryGetValue(model.Id, out var lastIdx);
-                bool inOrBeforeLast = hasPrev && lastIdx >= logIndex;
-                bool fireChanged = !_lastGunFire.TryGetValue(model.Id, out var prevFire)
-                                   || prevFire != gun.LastFireTargetId;
-                if (inOrBeforeLast && !fireChanged) return;
-                if (inOrBeforeLast && fireChanged)
-                {
-                    // 같은(또는 이미 미래로 밀린) bucket 내 Fire 전환 → 다음 sample로 미룸
-                    logIndex = lastIdx + 1;
-                    gridTime = logIndex * OutputPeriod;
-                }
-                _lastLogIndex[model.Id] = logIndex;
-                _lastGunFire[model.Id] = gun.LastFireTargetId;
-                WriteCiwsRow(gridTime, gun);
-            }
-        };
+        _initStream = new FileStream(Path.Combine(FileDir, "Init.pb"), FileMode.Create);
+        _objectInfoStream = new FileStream(Path.Combine(FileDir, "ObjectInfo.pb"), FileMode.Create);
+        _eventStream = new FileStream(Path.Combine(FileDir, "Event.pb"), FileMode.Create);
     }
 
-    private void WriteTargetRow(double time, TargetBase target)
+    private void AssignUniqueIdsAndWriteInit(SearchRadar sr)
+    {
+        // 1) Targets
+        foreach (var model in _engine.GetModelsByClass(ModelClass.Target))
+        {
+            if (model is not TargetBase target) continue;
+            target.UniqueId = _nextUniqueId++;
+            WriteInitForTarget(0.0, target);
+        }
+
+        // 2) CIWS Guns
+        foreach (var gun in _guns)
+        {
+            gun.UniqueId = _nextUniqueId++;
+            WriteInitForCiws(0.0, gun);
+        }
+
+        // 3) SearchRadar
+        sr.UniqueId = _nextUniqueId++;
+        WriteInitForRadar(0.0, sr);
+
+        // 4) C2Control
+        if (_c2 is not null)
+        {
+            _c2.UniqueId = _nextUniqueId++;
+            WriteInitForC2(0.0, _c2);
+        }
+    }
+
+    private static ObjectType ToObjectTypeForTarget(TargetBase target) => target switch
+    {
+        Airplane => ObjectType.Airplane,
+        Drone => ObjectType.Drone,
+        Uav => ObjectType.Uav,
+        Rocket => ObjectType.Rocket,
+        Missile => ObjectType.Missile1,
+        _ => ObjectType.Na,
+    };
+
+    private void WriteInitForTarget(double t, TargetBase target)
     {
         var llh = GeoUtil.EnuToLla(target.Pos, _engine.Origin);
-        _targetCsvWriter!.WriteLine(string.Join(',', new[]
+        WriteInit(new InitObject
         {
-            time.ToString("F4"),
-            target.InputId.ToString(),
-            target.Type.ToString(),
-            ((int)target.Status).ToString(),
-            llh.Lat.ToString("F8"),
-            llh.Lon.ToString("F8"),
-            llh.Hgt.ToString("F4"),
-            "0",
-            target.Pose.Pitch.ToString("F4"),
-            target.Pose.Yaw.ToString("F4"),
-        }));
+            Time = t,
+            Id = target.UniqueId,
+            Type = ToObjectTypeForTarget(target),
+            Lat = llh.Lat,
+            Lon = llh.Lon,
+            Alt = llh.Hgt,
+            Roll = 0.0,
+            Pitch = target.Pose.Pitch,
+            Yaw = target.Pose.Yaw,
+            InitBullet = 0,
+        });
     }
 
-    private void WriteStatusRow(double time)
+    private void WriteInitForCiws(double t, Gun gun)
     {
-        if (_statusCsvWriter is null || _c2 is null) return;
-
-        string line = string.Join(',', new[]
+        var llh = GeoUtil.EnuToLla(gun.Pos, _engine.Origin);
+        WriteInit(new InitObject
         {
-            time.ToString("F4"),
-            _c2.TotalTargets.ToString(),
-            _c2.DetectedCount.ToString(),
-            _c2.InterceptSuccess.ToString(),
-            _c2.InterceptFail.ToString(),
+            Time = t,
+            Id = gun.UniqueId,
+            Type = ObjectType.Ciws,
+            Lat = llh.Lat,
+            Lon = llh.Lon,
+            Alt = llh.Hgt,
+            Roll = 0.0,
+            Pitch = gun.Pose.Pitch,
+            Yaw = gun.Pose.Yaw,
+            InitBullet = (uint)Math.Max(0, gun.Ammo),
+        });
+    }
+
+    private void WriteInitForRadar(double t, SearchRadar sr)
+    {
+        var llh = GeoUtil.EnuToLla(sr.Pos, _engine.Origin);
+        WriteInit(new InitObject
+        {
+            Time = t,
+            Id = sr.UniqueId,
+            Type = ObjectType.Radar,
+            Lat = llh.Lat,
+            Lon = llh.Lon,
+            Alt = llh.Hgt,
+            Roll = 0.0,
+            Pitch = 0.0,
+            Yaw = 0.0,
+            InitBullet = 0,
+        });
+    }
+
+    private void WriteInitForC2(double t, C2Control c2)
+    {
+        WriteInit(new InitObject
+        {
+            Time = t,
+            Id = c2.UniqueId,
+            Type = ObjectType.C2,
+            Lat = _siteCenterLlh.Lat,
+            Lon = _siteCenterLlh.Lon,
+            Alt = _siteCenterLlh.Hgt,
+            Roll = 0.0,
+            Pitch = 0.0,
+            Yaw = 0.0,
+            InitBullet = 0,
+        });
+    }
+
+    private void WriteInitForBullet(double t, uint uniqueId, XYZPos enuPos)
+    {
+        var llh = GeoUtil.EnuToLla(enuPos, _engine.Origin);
+        WriteInit(new InitObject
+        {
+            Time = t,
+            Id = uniqueId,
+            Type = ObjectType.BulletA,
+            Lat = llh.Lat,
+            Lon = llh.Lon,
+            Alt = llh.Hgt,
+            Roll = 0.0,
+            Pitch = 0.0,
+            Yaw = 0.0,
+            InitBullet = 0,
+        });
+    }
+
+    private void WriteInit(InitObject msg)
+    {
+        if (_initStream is null) return;
+        msg.WriteDelimitedTo(_initStream);
+        _initStream.Flush();
+    }
+
+    private void WriteObjectInfo(ObjectInfo msg)
+    {
+        if (_objectInfoStream is null) return;
+        msg.WriteDelimitedTo(_objectInfoStream);
+        _objectInfoStream.Flush();
+    }
+
+    private void WriteEvent(EventEntry msg)
+    {
+        if (_eventStream is null) return;
+        msg.WriteDelimitedTo(_eventStream);
+        _eventStream.Flush();
+    }
+
+    // ObjectInfo 콜백 (Target/Gun 정기 + Bullet 1Hz 그리드)
+
+    private void HandleModelTransitioned(double time, Model model)
+    {
+        // Bullet 1Hz 그리드 트리거 (모든 모델 전이 시점에 체크)
+        FlushBulletGridUpTo(time);
+
+        if (!model.IsStateChanged) return;
+        model.IsStateChanged = false;
+
+        long logIndex = (long)Math.Round(time / OutputPeriod);
+        double gridTime = logIndex * OutputPeriod;
+
+        if (model.Class == ModelClass.Target && model is TargetBase target)
+        {
+            // Status 전환 시점은 반드시 기록 (Alive→Destroyed/Collided가 버킷 중복으로 누락되던 문제)
+            bool hasPrevIdx = _lastLogIndex.TryGetValue(model.Id, out var lastIdxT);
+            bool inOrBeforeLastT = hasPrevIdx && lastIdxT >= logIndex;
+            int curStatus = (int)target.Status;
+            bool statusChanged = !_lastTargetStatus.TryGetValue(model.Id, out var prev) || prev != curStatus;
+            if (inOrBeforeLastT && !statusChanged) return;
+            if (inOrBeforeLastT && statusChanged)
+            {
+                logIndex = lastIdxT + 1;
+                gridTime = logIndex * OutputPeriod;
+            }
+            _lastLogIndex[model.Id] = logIndex;
+            _lastTargetStatus[model.Id] = curStatus;
+            WriteTargetObjectInfo(gridTime, target);
+        }
+        else if (model.Type == MtGun && model is Gun gun)
+        {
+            bool hasPrev = _lastLogIndex.TryGetValue(model.Id, out var lastIdx);
+            bool inOrBeforeLast = hasPrev && lastIdx >= logIndex;
+            bool fireChanged = !_lastGunFire.TryGetValue(model.Id, out var prevFire)
+                               || prevFire != gun.LastFireTargetId;
+            if (inOrBeforeLast && !fireChanged) return;
+            if (inOrBeforeLast && fireChanged)
+            {
+                logIndex = lastIdx + 1;
+                gridTime = logIndex * OutputPeriod;
+            }
+            _lastLogIndex[model.Id] = logIndex;
+            _lastGunFire[model.Id] = gun.LastFireTargetId;
+            WriteGunObjectInfo(gridTime, gun);
+        }
+    }
+
+    private ObjectState GetTargetState(TargetBase target)
+    {
+        if (_c2 is null) return ObjectState.Basic;
+        if (_c2.IsTracked(target.Id)) return ObjectState.Tracked;
+        if (_c2.IsDetected(target.Id)) return ObjectState.Detected;
+        return ObjectState.Basic;
+    }
+
+    private void WriteTargetObjectInfo(double time, TargetBase target)
+    {
+        var llh = GeoUtil.EnuToLla(target.Pos, _engine.Origin);
+        WriteObjectInfo(new ObjectInfo
+        {
+            Time = time,
+            Id = target.UniqueId,
+            State = GetTargetState(target),
+            Lat = llh.Lat,
+            Lon = llh.Lon,
+            Alt = llh.Hgt,
+            Roll = 0.0,
+            Pitch = target.Pose.Pitch,
+            Yaw = target.Pose.Yaw,
+        });
+    }
+
+    private void WriteGunObjectInfo(double time, Gun gun)
+    {
+        var llh = GeoUtil.EnuToLla(gun.Pos, _engine.Origin);
+        WriteObjectInfo(new ObjectInfo
+        {
+            Time = time,
+            Id = gun.UniqueId,
+            State = ObjectState.Basic,
+            Lat = llh.Lat,
+            Lon = llh.Lon,
+            Alt = llh.Hgt,
+            Roll = 0.0,
+            Pitch = gun.Pose.Pitch,
+            Yaw = gun.Pose.Yaw,
+        });
+    }
+
+    private void WriteBulletObjectInfo(double time, uint uniqueId, XYZPos enuPos)
+    {
+        var llh = GeoUtil.EnuToLla(enuPos, _engine.Origin);
+        WriteObjectInfo(new ObjectInfo
+        {
+            Time = time,
+            Id = uniqueId,
+            State = ObjectState.Basic,
+            Lat = llh.Lat,
+            Lon = llh.Lon,
+            Alt = llh.Hgt,
+            Roll = 0.0,
+            Pitch = 0.0,
+            Yaw = 0.0,
+        });
+    }
+
+    private void FlushBulletGridUpTo(double time)
+    {
+        while (time + 1e-9 >= _nextBulletGridTime)
+        {
+            double gridTime = _nextBulletGridTime;
+            foreach (var gun in _guns)
+            {
+                foreach (var (uid, pos) in gun.ActiveBullets)
+                {
+                    WriteBulletObjectInfo(gridTime, uid, pos);
+                }
+            }
+            _nextBulletGridTime += BulletGridPeriod;
+        }
+    }
+
+    // 이벤트 콜백 (FIRE/HIT/SELF_DESTRUCT)
+
+    private void HandleSimEvent(double t, uint uniqueId, SimEventKind kind, XYZPos enuPos)
+    {
+        if (kind == SimEventKind.Fire)
+        {
+            // 신규 Bullet → Init.pb 추가
+            WriteInitForBullet(t, uniqueId, enuPos);
+        }
+
+        // Event.pb 기록
+        WriteEvent(new EventEntry
+        {
+            Time = t,
+            Id = uniqueId,
+            Type = ToProtoEventType(kind),
         });
 
-        // 동일 Time에 여러 호출이 들어오면 마지막 값만 남기도록 버퍼링
-        if (_pendingStatusLine is not null && time != _pendingStatusTime)
-        {
-            _statusCsvWriter.WriteLine(_pendingStatusLine);
-            _statusCsvWriter.Flush();
-        }
-        _pendingStatusTime = time;
-        _pendingStatusLine = line;
+        // ObjectInfo.pb 추가 (이벤트 시점의 Bullet 위치)
+        WriteBulletObjectInfo(t, uniqueId, enuPos);
     }
 
-    private void FlushPendingStatus()
+    private static ProtoEventType ToProtoEventType(SimEventKind kind) => kind switch
     {
-        if (_statusCsvWriter is null || _pendingStatusLine is null) return;
-        _statusCsvWriter.WriteLine(_pendingStatusLine);
-        _statusCsvWriter.Flush();
-        _pendingStatusLine = null;
-    }
+        SimEventKind.Fire => ProtoEventType.Fire,
+        SimEventKind.Hit => ProtoEventType.Hit,
+        SimEventKind.SelfDestruct => ProtoEventType.SelfDestruct,
+        _ => ProtoEventType.Fire,
+    };
 
-    private void WriteCiwsRow(double time, Gun gun)
-    {
-        _ciwsCsvWriter!.WriteLine(string.Join(',', new[]
-        {
-            time.ToString("F4"),
-            gun.InputId.ToString(),
-            gun.Pose.Pitch.ToString("F4"),
-            gun.Pose.Yaw.ToString("F4"),
-            gun.LastFireTargetId.ToString(),
-            gun.LastFireTargetType.ToString(),
-            gun.TotalFired.ToString(),
-        }));
-    }
+    // 모델 등록
 
     private void RegisterCiws(List<RecordItem> ciwsItems)
     {
@@ -319,14 +531,13 @@ public class SimulationBuilder
             trackRadar.InputId = ciws.Id;
             gun.InputId = ciws.Id;
             ApplyTerrainToTrackRadar(trackRadar);
+            _guns.Add(gun);
             ciwsBaseId += 10;
         }
     }
 
     private void RegisterTargets(List<RecordItem> targetItems)
     {
-        // Test 직선 기동 예시용 공통 목표 지점 (월드 origin lat/lon, 고도 95m → ENU z=95)
-        // 정식에서는 input의 Waypoint를 그대로 AddWaypoint로 연결하고 이 블록 제거
         var destination = new XYZPos(0.0, 0.0, 95.0);
 
         int tgtBaseId = 1;
@@ -339,7 +550,7 @@ public class SimulationBuilder
             var airplane = _engine.AddAirplane(tgtBaseId, pos, DefaultSpeed, azimuth, elevation, tgt.StartT,
                 AirplaneSizeX, AirplaneSizeY, AirplaneSizeZ);
             airplane.InputId = tgt.Id;
-            airplane.Destination = destination;   // Test (복원 시 제거)
+            airplane.Destination = destination;
             tgtBaseId++;
         }
     }

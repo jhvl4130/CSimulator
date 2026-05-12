@@ -7,6 +7,11 @@ public abstract class Model
 {
     public int Id { get; }
     public int InputId { get; set; }
+
+    /// <summary>
+    /// 출력(protobuf) 전용 UniqueId. SimulationBuilder가 등록 시 부여.
+    /// </summary>
+    public uint UniqueId { get; set; }
     public string Name { get; set; } = "";
     public ModelClass Class { get; set; }
     public int Type { get; set; }

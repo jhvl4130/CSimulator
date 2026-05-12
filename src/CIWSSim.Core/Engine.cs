@@ -60,6 +60,12 @@ public class Engine
     /// </summary>
     public Action<double, Model>? OnModelTransitioned { get; set; }
 
+    /// <summary>
+    /// Bullet 등 동적 객체에서 발생하는 단발성 이벤트 통지 콜백.
+    /// (time, uniqueId, eventKind, posEnu) — posEnu는 이벤트 발생 시점의 객체 위치
+    /// </summary>
+    public Action<double, uint, SimEventKind, Geometry.XYZPos>? OnSimulationEvent { get; set; }
+
     private void ScheduleModel(Model model, double time)
     {
         long t64 = (long)Math.Round(time * SimConstants.TScale);

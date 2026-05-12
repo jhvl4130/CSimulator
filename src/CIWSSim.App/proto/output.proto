@@ -1,0 +1,61 @@
+syntax = "proto3";
+package ciwssim;
+option csharp_namespace = "CIWSSimulator.Proto";
+
+enum ObjectType {
+  NA        = 0;
+  CIWS      = 1;
+  RADAR     = 2;
+  C2        = 3;
+  BULLET_A  = 4;
+  BULLET_B  = 5;
+  AIRPLANE  = 101;
+  DRONE     = 102;
+  UAV       = 103;
+  ROCKET    = 104;
+  MISSILE_1 = 105;
+  MISSILE_2 = 106;
+}
+
+enum ObjectState {
+  BASIC    = 0;
+  DETECTED = 1;
+  TRACKED  = 2;
+}
+
+enum EventType {
+  FIRE          = 0;
+  HIT           = 1;
+  SELF_DESTRUCT = 2;
+}
+
+message InitObject {
+  double time = 1;
+  uint32 id = 2;
+  ObjectType type = 3;
+  double lat = 4;
+  double lon = 5;
+  double alt = 6;
+  double roll = 7;
+  double pitch = 8;
+  double yaw = 9;
+  uint32 init_bullet = 10;
+}
+
+message ObjectInfo {
+  double time = 1;
+  uint32 id = 2;
+  ObjectState state = 3;
+  double lat = 4;
+  double lon = 5;
+  double alt = 6;
+  double roll = 7;
+  double pitch = 8;
+  double yaw = 9;
+}
+
+message EventEntry {
+  double time = 1;
+  uint32 id = 2;
+  EventType type = 3;
+}
